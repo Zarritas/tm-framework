@@ -1,3 +1,7 @@
+[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/Zarritas/tm-framework/releases/tag/Version-1.0.0)
+[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/Zarritas/tm-framework/blob/main/LICENSE_EN)
+[![CONTRIBUTING](https://img.shields.io/badge/CONTRIBUTING-orange)](https://github.com/Zarritas/tm-framework/blob/main/CONTRIBUTING_EN.md)
+
 ## 🌐 Languages / Idiomas
 
 - 🇺🇸 **English** (current)
@@ -6,10 +10,6 @@
 # 🔧 TM Framework
 
 Reactive component framework for Tampermonkey, inspired by Vue and React.
-
-[![Version](https://img.shields.io/badge/version-1.0.0-blue)](https://github.com/Zarritas/tm-framework/releases/tag/Version-1.0.0)
-[![License](https://img.shields.io/badge/license-MIT-green)](https://github.com/Zarritas/tm-framework/blob/main/LICENSE_EN)
-[![CONTRIBUTING](https://img.shields.io/badge/CONTRIBUTING-orange)](https://github.com/Zarritas/tm-framework/blob/main/CONTRIBUTING_EN.md)
 
 ## ✨ Features
 

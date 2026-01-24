@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TM Framework - Test Suite</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+        
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .test-output {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .status.running {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .metric {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .test-details {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .test-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        
+        .test-item.passed {
+            border-left: 4px solid #28a745;
+        }
+        
+        .test-item.failed {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .test-name {
+            font-weight: bold;
+        }
+        
+        .test-duration {
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .test-error {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧪 TM Framework Test Suite</h1>
+        <p>Unit tests for component updates, logging, and performance optimizations</p>
+    </div>
+
+    <div class="status" id="status">
+        Ready to run tests
+    </div>
+
+        <div class="controls">
+            <button id="runTests">🚀 Run All Tests</button>
+            <button id="runPerformance">⚡ Performance Tests</button>
+            <button id="runComponents">🧩 Component Tests</button>
+            <button id="runLabelTests">🏷️ Label Editor Tests</button>
+            <button id="runComprehensive">📊 Comprehensive Tests</button>
+            <button id="clearOutput">🗑️ Clear Output</button>
+            <button id="debugMode">🔍 Enable Debug Mode</button>
+        </div>
+
+    <div class="metrics" id="metrics" style="display: none;">
+        <div class="metric">
+            <div class="metric-value" id="totalTests">0</div>
+            <div class="metric-label">Total Tests</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value" id="passedTests">0</div>
+            <div class="metric-label">Passed ✅</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value" id="failedTests">0</div>
+            <div class="metric-label">Failed ❌</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value" id="successRate">0%</div>
+            <div class="metric-label">Success Rate</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value" id="avgDuration">0ms</div>
+            <div class="metric-label">Avg Duration</div>
+        </div>
+    </div>
+
+    <div class="test-output" id="output">
+Test output will appear here when you run tests...
+    </div>
+
+    <div class="test-details" id="testDetails" style="display: none;">
+        <h3>📋 Test Details</h3>
+        <div id="testList"></div>
+    </div>
+
+    <!-- Load TM Framework -->
+    <script src="../dist/tm-framework.js"></script>
+    
+    <script>
+        let isRunning = false;
+        
+        // Initialize test suites properly after all scripts are loaded
+        function initializeTestSuites() {
+            if (typeof TM !== 'undefined' && TM.Component) {
+                console.log('🔧 Initializing test suites...');
+                
+                // Initialize core test suite if available
+                if (typeof TMTestSuite !== 'undefined') {
+                    window.testSuite = new TMTestSuite();
+                    console.log('✅ Core test suite initialized');
+                }
+                
+                // Initialize label editor test suite if available
+                if (typeof LabelEditorTestSuite !== 'undefined') {
+                    window.labelTestSuite = new LabelEditorTestSuite();
+                    console.log('✅ Label editor test suite initialized');
+                }
+                
+                // Enable all test buttons
+                document.getElementById('runTests').disabled = false;
+                document.getElementById('runPerformance').disabled = false;
+                document.getElementById('runComponents').disabled = false;
+                document.getElementById('runLabelTests').disabled = false;
+                document.getElementById('runComprehensive').disabled = false;
+                
+                updateOutput('✅ All test suites initialized and ready!\n');
+                updateOutput('📝 Available tests:\n');
+                updateOutput('   • Component Tests (lifecycle, state, performance)\n');
+                updateOutput('   • Label Editor Tests (specific to disappearing groups issue)\n');
+                updateOutput('   • Comprehensive Tests (all suites with detailed reporting)\n\n');
+                updateOutput('🚀 Click "Run All Tests" to begin...\n');
+            } else {
+                setTimeout(initializeTestSuites, 100);
+            }
+        }
+        
+        function updateStatus(message, type = '') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+        }
+        
+        function updateOutput(text) {
+            const output = document.getElementById('output');
+            output.textContent += text + '\n';
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function clearOutput() {
+            document.getElementById('output').textContent = '';
+        }
+        
+        function updateMetrics(results) {
+            document.getElementById('metrics').style.display = 'grid';
+            document.getElementById('totalTests').textContent = results.total;
+            document.getElementById('passedTests').textContent = results.passed;
+            document.getElementById('failedTests').textContent = results.failed;
+            document.getElementById('successRate').textContent = 
+                results.total > 0 ? ((results.passed / results.total) * 100).toFixed(1) + '%' : '0%';
+            
+            const total = results.total || 0;
+            const avgDuration = total > 0
+                ? results.details.reduce((sum, d) => sum + (d.duration || 0), 0) / total
+                : 0;
+            document.getElementById('avgDuration').textContent = avgDuration.toFixed(2) + 'ms';
+        }
+        
+        function updateTestDetails(results) {
+            const details = document.getElementById('testDetails');
+            const list = document.getElementById('testList');
+            
+            details.style.display = 'block';
+            list.innerHTML = '';
+            
+            results.details.forEach(test => {
+                const item = document.createElement('div');
+                item.className = 'test-item ' + test.status;
+                
+                const name = document.createElement('div');
+                name.className = 'test-name';
+                name.textContent = test.name;
+                item.appendChild(name);
+                
+                const duration = document.createElement('div');
+                duration.className = 'test-duration';
+                duration.textContent = `Duration: ${test.duration?.toFixed(2) || 0}ms`;
+                item.appendChild(duration);
+                
+                if (test.error) {
+                    const error = document.createElement('div');
+                    error.className = 'test-error';
+                    error.textContent = `Error: ${test.error}`;
+                    item.appendChild(error);
+                }
+                
+                list.appendChild(item);
+            });
+        }
+        
+        async function runLabelTests() {
+            if (isRunning || !window.labelTestSuite) return;
+            
+            isRunning = true;
+            clearOutput();
+            
+            // Disable buttons
+            document.getElementById('runTests').disabled = true;
+            document.getElementById('runPerformance').disabled = true;
+            document.getElementById('runComponents').disabled = true;
+            document.getElementById('runLabelTests').disabled = true;
+            document.getElementById('runComprehensive').disabled = true;
+            
+            updateStatus('🏷️ Running Label Editor Tests...', 'running');
+            updateOutput('🏷️ Starting Label Editor Integration Tests...\n');
+            
+            try {
+                const results = await window.labelTestSuite.runAll();
+                
+                updateOutput('\n🏁 Label Editor Tests completed!\n');
+                updateOutput(`📊 Results: ${results.passed}/${results.total} passed\n`);
+                
+                if (results.failed === 0) {
+                    updateStatus('✅ All label editor tests passed!', 'success');
+                } else {
+                    updateStatus(`❌ ${results.failed} label editor test(s) failed`, 'error');
+                }
+                
+                // Update metrics for label tests
+                document.getElementById('metrics').style.display = 'grid';
+                document.getElementById('totalTests').textContent = results.total;
+                document.getElementById('passedTests').textContent = results.passed;
+                document.getElementById('failedTests').textContent = results.failed;
+                document.getElementById('successRate').textContent = 
+                    results.total > 0 ? ((results.passed / results.total) * 100).toFixed(1) + '%' : '0%';
+                
+            } catch (error) {
+                updateOutput(`\n❌ Label Editor test suite error: ${error.message}\n`);
+                updateStatus('❌ Label Editor test suite failed', 'error');
+            } finally {
+                isRunning = false;
+                document.getElementById('runTests').disabled = false;
+                document.getElementById('runPerformance').disabled = false;
+                document.getElementById('runComponents').disabled = false;
+                document.getElementById('runLabelTests').disabled = false;
+                document.getElementById('runComprehensive').disabled = false;
+            }
+        }
+        
+        async function runComprehensiveTests() {
+            if (isRunning || !window.runComprehensiveTests) return;
+            
+            isRunning = true;
+            clearOutput();
+            
+            // Disable buttons
+            document.getElementById('runTests').disabled = true;
+            document.getElementById('runPerformance').disabled = true;
+            document.getElementById('runComponents').disabled = true;
+            document.getElementById('runLabelTests').disabled = true;
+            document.getElementById('runComprehensive').disabled = true;
+            
+            updateStatus('📊 Running Comprehensive Test Suite...', 'running');
+            updateOutput('📊 Starting Comprehensive Test Suite...\n');
+            
+            try {
+                const results = await window.runComprehensiveTests();
+                
+                updateOutput('\n🏁 Comprehensive Test Suite completed!\n');
+                updateOutput(`📊 Overall Results: ${results.totalPassed}/${results.totalTests} passed\n`);
+                updateOutput(`💚 Framework Health Score: ${results.healthScore || 'N/A'}/100\n`);
+                
+                if (results.totalFailed === 0) {
+                    updateStatus('🎉 All tests passed - Excellent health!', 'success');
+                } else {
+                    updateStatus(`❌ ${results.totalFailed} test(s) failed`, 'error');
+                }
+                
+                // Update comprehensive metrics
+                document.getElementById('metrics').style.display = 'grid';
+                document.getElementById('totalTests').textContent = results.totalTests;
+                document.getElementById('passedTests').textContent = results.totalPassed;
+                document.getElementById('failedTests').textContent = results.totalFailed;
+                document.getElementById('successRate').textContent = 
+                    results.totalTests > 0 ? ((results.totalPassed / results.totalTests) * 100).toFixed(1) + '%' : '0%';
+                
+                const avgDuration = (results.endTime - results.startTime) / 1000;
+                document.getElementById('avgDuration').textContent = avgDuration.toFixed(2) + 's';
+                
+            } catch (error) {
+                updateOutput(`\n❌ Comprehensive test suite error: ${error.message}\n`);
+                updateStatus('❌ Comprehensive test suite failed', 'error');
+            } finally {
+                isRunning = false;
+                document.getElementById('runTests').disabled = false;
+                document.getElementById('runPerformance').disabled = false;
+                document.getElementById('runComponents').disabled = false;
+                document.getElementById('runLabelTests').disabled = false;
+                document.getElementById('runComprehensive').disabled = false;
+            }
+        }
+        
+        async function runTests(category = null) {
+            if (isRunning || !window.testSuite) return;
+            
+            isRunning = true;
+            clearOutput();
+            
+            // Disable buttons
+            document.getElementById('runTests').disabled = true;
+            document.getElementById('runPerformance').disabled = true;
+            document.getElementById('runComponents').disabled = true;
+            
+            updateStatus('🏃 Running tests...', 'running');
+            updateOutput('🧪 Starting TM Framework Test Suite...\n');
+            
+            try {
+                let results;
+                
+                if (category === 'performance') {
+                    // Run only performance tests
+                    const performanceTests = window.testSuite.tests.filter(t => t.category === 'performance');
+                    window.testSuite.tests = performanceTests;
+                    results = await window.testSuite.runAll();
+                    // Restore all tests
+                    location.reload(); // Simple way to restore
+                    return;
+                } else if (category === 'components') {
+                    // Run only component tests
+                    const componentTests = window.testSuite.tests.filter(t => t.category === 'component');
+                    window.testSuite.tests = componentTests;
+                    results = await window.testSuite.runAll();
+                    location.reload();
+                    return;
+                } else {
+                    results = await window.testSuite.runAll();
+                }
+                
+                updateOutput('\n🏁 Test completed!\n');
+                updateOutput(`📊 Results: ${results.passed}/${results.total} passed\n`);
+                
+                if (results.failed === 0) {
+                    updateStatus('✅ All tests passed!', 'success');
+                } else {
+                    updateStatus(`❌ ${results.failed} test(s) failed`, 'error');
+                }
+                
+                updateMetrics(results);
+                updateTestDetails(results);
+                
+                // Add debug information
+                if (TM.debug) {
+                    updateOutput('\n🔍 Debug Information:\n');
+                    const allComponents = TM.debug.getAllComponentInfo();
+                    updateOutput(`Active components: ${allComponents.length}\n`);
+                    allComponents.forEach(comp => {
+                        updateOutput(`- ${comp.componentId}: ${comp.updateLog.length} updates\n`);
+                    });
+                }
+                
+            } catch (error) {
+                updateOutput(`\n❌ Test suite error: ${error.message}\n`);
+                updateStatus('❌ Test suite failed', 'error');
+            } finally {
+                isRunning = false;
+                document.getElementById('runTests').disabled = false;
+                document.getElementById('runPerformance').disabled = false;
+                document.getElementById('runComponents').disabled = false;
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('runTests').addEventListener('click', () => runTests());
+        document.getElementById('runPerformance').addEventListener('click', () => runTests('performance'));
+        document.getElementById('runComponents').addEventListener('click', () => runTests('components'));
+        document.getElementById('runLabelTests').addEventListener('click', runLabelTests);
+        document.getElementById('runComprehensive').addEventListener('click', runComprehensiveTests);
+        document.getElementById('clearOutput').addEventListener('click', clearOutput);
+        document.getElementById('debugMode').addEventListener('click', () => {
+            if (TM && TM.debug) {
+                if (TM.debug.enabled) {
+                    TM.debug.disable();
+                    document.getElementById('debugMode').textContent = '🔍 Enable Debug Mode';
+                    updateOutput('🔍 Debug mode disabled\n');
+                } else {
+                    TM.debug.enable();
+                    document.getElementById('debugMode').textContent = '🔍 Disable Debug Mode';
+                    updateOutput('🔍 Debug mode enabled\n');
+                }
+            }
+        });
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initTestSuite);
+        
+        // Replace the old init function with better initialization
+        function initTestSuite() {
+            console.log('🔧 Initializing TM Framework and test suites...');
+            
+            // Initialize test suites properly after all scripts are loaded
+            function initializeTestSuites() {
+                if (typeof TM !== 'undefined' && TM.Component) {
+                    console.log('🔧 TM Framework loaded, initializing test suites...');
+                    
+                    // Initialize core test suite if available
+                    if (typeof TMTestSuite !== 'undefined') {
+                        window.testSuite = new TMTestSuite();
+                        console.log('✅ Core test suite initialized');
+                    }
+                    
+                    // Initialize label editor test suite if available
+                    if (typeof LabelEditorTestSuite !== 'undefined') {
+                        window.labelTestSuite = new LabelEditorTestSuite();
+                        console.log('✅ Label editor test suite initialized');
+                    }
+                    
+                    // Enable all test buttons
+                    document.getElementById('runTests').disabled = false;
+                    document.getElementById('runPerformance').disabled = false;
+                    document.getElementById('runComponents').disabled = false;
+                    document.getElementById('runLabelTests').disabled = false;
+                    document.getElementById('runComprehensive').disabled = false;
+                    
+                    updateOutput('✅ All test suites initialized and ready!\n');
+                    updateOutput('📝 Available tests:\n');
+                    updateOutput('   • Component Tests (lifecycle, state, performance)\n');
+                    updateOutput('   • Label Editor Tests (specific to disappearing groups issue)\n');
+                    updateOutput('   • Comprehensive Tests (all suites with detailed reporting)\n\n');
+                    updateOutput('🚀 Click "Run All Tests" to begin...\n');
+                } else {
+                    setTimeout(initializeTestSuites, 100);
+                }
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeTestSuites);
+        
+        // Add some helpful initial output
+        updateOutput('🎯 TM Framework Test Suite\n');
+        updateOutput('===============================\n');
+        updateOutput('This test suite validates:\n');
+        updateOutput('• Component lifecycle and updates\n');
+        updateOutput('• State management and reactivity\n');
+        updateOutput('• Performance optimizations\n');
+        updateOutput('• Logging and debugging\n');
+        updateOutput('• DOM manipulation and diffing\n');
+        updateOutput('• Memory leak prevention\n');
+        updateOutput('• Error handling\n\n');
+        updateOutput('📝 Click "Run All Tests" to begin...\n');
+    </script>
+    
+    <!-- Load test suites -->
+    <script src="component-tests.js"></script>
+    <script src="label-editor-tests-simple.js"></script>
+    <script src="comprehensive-test-runner.js"></script>
+</body>
+</html>

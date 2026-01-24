@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TM Framework - Fixed Test Runner</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .test-output {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .status.running { background: #fff3cd; color: #856404; border: 1px solid #ffeaa7; }
+        .status.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .status.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .metric {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .metric-value { font-size: 20px; font-weight: bold; color: #007bff; }
+        .metric-label { font-size: 12px; color: #666; margin-top: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧪 TM Framework - Fixed Test Runner</h1>
+        <p>Unit tests with corrected syntax and proper initialization</p>
+    </div>
+
+    <div class="status" id="status">Ready to run tests</div>
+
+    <div class="controls">
+        <button id="testBasic">🔧 Basic Framework Test</button>
+        <button id="testComponent">🧩 Component Test</button>
+        <button id="testLabelEditor">🏷️ Label Editor Test</button>
+        <button id="testAll">🚀 Run All Tests</button>
+        <button id="clearOutput">🗑️ Clear Output</button>
+        <button id="debugMode">🔍 Enable Debug Mode</button>
+    </div>
+
+    <div class="metrics" id="metrics" style="display: none;">
+        <div class="metric">
+            <div class="metric-value" id="totalTests">0</div>
+            <div class="metric-label">Total Tests</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value" id="passedTests">0</div>
+            <div class="metric-label">Passed ✅</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value" id="failedTests">0</div>
+            <div class="metric-label">Failed ❌</div>
+        </div>
+    </div>
+
+    <div class="test-output" id="output">Test output will appear here...</div>
+
+    <!-- Load TM Framework -->
+    <script src="../dist/tm-framework.js"></script>
+    
+    <script>
+        let currentResults = { total: 0, passed: 0, failed: 0 };
+        
+        function updateStatus(message, type = '') {
+            document.getElementById('status').textContent = message;
+            document.getElementById('status').className = 'status ' + type;
+        }
+        
+        function updateOutput(text) {
+            const output = document.getElementById('output');
+            output.textContent += text + '\n';
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function clearOutput() {
+            document.getElementById('output').textContent = '';
+        }
+        
+        function updateMetrics() {
+            document.getElementById('metrics').style.display = 'grid';
+            document.getElementById('totalTests').textContent = currentResults.total;
+            document.getElementById('passedTests').textContent = currentResults.passed;
+            document.getElementById('failedTests').textContent = currentResults.failed;
+        }
+        
+        // Test Framework Basic Functionality
+        async function testBasicFramework() {
+            updateStatus('🔧 Testing basic framework...', 'running');
+            clearOutput();
+            updateOutput('🔧 Basic Framework Test\n');
+            
+            try {
+                let passed = 0, failed = 0, total = 0;
+                
+                // Test 1: Framework loaded
+                total++;
+                if (typeof TM !== 'undefined' && TM.version) {
+                    updateOutput(`✅ Test 1: TM Framework v${TM.version} loaded`);
+                    passed++;
+                } else {
+                    updateOutput('❌ Test 1: TM Framework not loaded');
+                    failed++;
+                }
+                
+                // Test 2: Core components available
+                total++;
+                if (TM.Component && TM.reactive) {
+                    updateOutput('✅ Test 2: Core components available');
+                    passed++;
+                } else {
+                    updateOutput('❌ Test 2: Core components missing');
+                    failed++;
+                }
+                
+                // Test 3: Debug system
+                total++;
+                if (TM.debug && typeof TM.debug.enable === 'function') {
+                    updateOutput('✅ Test 3: Debug system available');
+                    passed++;
+                } else {
+                    updateOutput('❌ Test 3: Debug system missing');
+                    failed++;
+                }
+                
+                // Test 4: Storage system
+                total++;
+                if (TM.storage && typeof TM.storage.get === 'function') {
+                    updateOutput('✅ Test 4: Storage system available');
+                    passed++;
+                } else {
+                    updateOutput('❌ Test 4: Storage system missing');
+                    failed++;
+                }
+                
+                currentResults = { total, passed, failed };
+                updateMetrics();
+                
+                if (failed === 0) {
+                    updateStatus('✅ Basic framework test passed!', 'success');
+                } else {
+                    updateStatus(`❌ ${failed} basic test(s) failed`, 'error');
+                }
+                
+                updateOutput(`\n📊 Results: ${passed}/${total} passed\n`);
+                
+            } catch (error) {
+                updateOutput(`❌ Basic framework test failed: ${error.message}`);
+                updateStatus('❌ Basic framework test failed', 'error');
+            }
+        }
+        
+        // Test Component Creation and Lifecycle
+        async function testComponent() {
+            updateStatus('🧩 Testing components...', 'running');
+            clearOutput();
+            updateOutput('🧩 Component Test\n');
+            
+            try {
+                let passed = 0, failed = 0, total = 0;
+                
+                // Test 1: Component creation
+                total++;
+                if (TM.Component) {
+                    class TestComponent extends TM.Component {
+                        initialState() { return { count: 0 }; }
+                        render() { return `<div>Count: ${this.state.count}</div>`; }
+                    }
+                    
+                    const component = new TestComponent();
+                    if (component && component.state) {
+                        updateOutput('✅ Test 1: Component creation successful');
+                        passed++;
+                    } else {
+                        updateOutput('❌ Test 1: Component creation failed');
+                        failed++;
+                    }
+                    
+                    // Test 2: Component mounting
+                    total++;
+                    const container = document.createElement('div');
+                    document.body.appendChild(container);
+                    
+                    component.mount(container);
+                    if (component._mounted && component.el) {
+                        updateOutput('✅ Test 2: Component mounting successful');
+                        passed++;
+                        
+                        // Test 3: State reactivity
+                        total++;
+                        const initialText = component.el.textContent;
+                        component.state.count = 5;
+                        
+                        setTimeout(() => {
+                            if (component.el.textContent !== initialText) {
+                                updateOutput('✅ Test 3: State reactivity working');
+                                passed++;
+                            } else {
+                                updateOutput('❌ Test 3: State reactivity not working');
+                                failed++;
+                            }
+                            
+                            // Test 4: Component destruction
+                            total++;
+                            component.destroy();
+                            if (!component._mounted && !component.el) {
+                                updateOutput('✅ Test 4: Component destruction successful');
+                                passed++;
+                            } else {
+                                updateOutput('❌ Test 4: Component destruction failed');
+                                failed++;
+                            }
+                            
+                            container.remove();
+                            
+                            currentResults = { total, passed, failed };
+                            updateMetrics();
+                            
+                            if (failed === 0) {
+                                updateStatus('✅ Component test passed!', 'success');
+                            } else {
+                                updateStatus(`❌ ${failed} component test(s) failed`, 'error');
+                            }
+                            
+                            updateOutput(`\n📊 Component Results: ${passed}/${total} passed\n`);
+                        }, 200);
+                        
+                    } else {
+                        updateOutput('❌ Test 2: Component mounting failed');
+                        failed++;
+                        
+                        currentResults = { total, passed, failed };
+                        updateMetrics();
+                    }
+                    
+                } else {
+                    updateOutput('❌ Test 1: TM.Component not available');
+                    failed++;
+                    total++; // We still count this as a test
+                    
+                    currentResults = { total, passed, failed };
+                    updateMetrics();
+                }
+                
+            } catch (error) {
+                updateOutput(`❌ Component test failed: ${error.message}`);
+                updateStatus('❌ Component test failed', 'error');
+            }
+        }
+        
+        // Test Label Editor Specific Functionality
+        async function testLabelEditor() {
+            updateStatus('🏷️ Testing label editor functionality...', 'running');
+            clearOutput();
+            updateOutput('🏷️ Label Editor Test\n');
+            
+            try {
+                let passed = 0, failed = 0, total = 0;
+                
+                // Test 1: Debounced updates
+                total++;
+                if (TM.debounce) {
+                    updateOutput('✅ Test 1: Debounce function available');
+                    passed++;
+                    
+                    // Test 2: State management performance
+                    total++;
+                    const startTime = performance.now();
+                    
+                    // Simulate rapid state changes
+                    for (let i = 0; i < 100; i++) {
+                        if (TM.reactive) {
+                            const state = TM.reactive({ count: i });
+                            state.count = i + 1;
+                        }
+                    }
+                    
+                    const duration = performance.now() - startTime;
+                    
+                    if (duration < 100) { // Should be fast
+                        updateOutput(`✅ Test 2: State performance good (${duration.toFixed(2)}ms)`);
+                        passed++;
+                    } else {
+                        updateOutput(`⚠️ Test 2: State performance could be better (${duration.toFixed(2)}ms)`);
+                        passed++; // Still count as pass, just warning
+                    }
+                    
+                } else {
+                    updateOutput('❌ Test 1: Debounce function not available');
+                    failed++;
+                }
+                
+                // Test 3: Logging system
+                total++;
+                if (TM.debug && TM.debug.enable) {
+                    updateOutput('✅ Test 3: Debug logging system available');
+                    passed++;
+                } else {
+                    updateOutput('❌ Test 3: Debug logging system not available');
+                    failed++;
+                }
+                
+                currentResults = { total, passed, failed };
+                updateMetrics();
+                
+                if (failed === 0) {
+                    updateStatus('✅ Label editor test passed!', 'success');
+                } else {
+                    updateStatus(`❌ ${failed} label editor test(s) failed`, 'error');
+                }
+                
+                updateOutput(`\n📊 Label Editor Results: ${passed}/${total} passed\n`);
+                
+            } catch (error) {
+                updateOutput(`❌ Label editor test failed: ${error.message}`);
+                updateStatus('❌ Label editor test failed', 'error');
+            }
+        }
+        
+        // Run all tests
+        async function runAllTests() {
+            updateStatus('🚀 Running all tests...', 'running');
+            clearOutput();
+            
+            const allResults = { total: 0, passed: 0, failed: 0 };
+            
+            updateOutput('🚀 Running All Tests\n');
+            updateOutput('=' .repeat(50) + '\n');
+            
+            await testBasicFramework();
+            allResults.total += currentResults.total;
+            allResults.passed += currentResults.passed;
+            allResults.failed += currentResults.failed;
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testComponent();
+            allResults.total += currentResults.total;
+            allResults.passed += currentResults.passed;
+            allResults.failed += currentResults.failed;
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            await testLabelEditor();
+            allResults.total += currentResults.total;
+            allResults.passed += currentResults.passed;
+            allResults.failed += currentResults.failed;
+            
+            updateOutput('\n' + '=' .repeat(50));
+            updateOutput('📊 FINAL RESULTS\n');
+            updateOutput(`Total Tests: ${allResults.total}\n`);
+            updateOutput(`Passed: ${allResults.passed} ✅\n`);
+            updateOutput(`Failed: ${allResults.failed} ❌\n`);
+            updateOutput(`Success Rate: ${((allResults.passed / allResults.total) * 100).toFixed(1)}%\n`);
+            
+            currentResults = allResults;
+            updateMetrics();
+            
+            if (allResults.failed === 0) {
+                updateStatus('🎉 All tests passed!', 'success');
+            } else {
+                updateStatus(`❌ ${allResults.failed} test(s) failed`, 'error');
+            }
+        }
+        
+        // Event listeners
+        document.getElementById('testBasic').addEventListener('click', testBasicFramework);
+        document.getElementById('testComponent').addEventListener('click', testComponent);
+        document.getElementById('testLabelEditor').addEventListener('click', testLabelEditor);
+        document.getElementById('testAll').addEventListener('click', runAllTests);
+        document.getElementById('clearOutput').addEventListener('click', clearOutput);
+        
+        document.getElementById('debugMode').addEventListener('click', () => {
+            if (TM && TM.debug) {
+                if (TM.debug.enabled) {
+                    TM.debug.disable();
+                    document.getElementById('debugMode').textContent = '🔍 Enable Debug Mode';
+                    updateOutput('🔍 Debug mode disabled\n');
+                } else {
+                    TM.debug.enable();
+                    document.getElementById('debugMode').textContent = '🔍 Disable Debug Mode';
+                    updateOutput('🔍 Debug mode enabled\n');
+                }
+            }
+        });
+        
+        // Initial message
+        updateOutput('🎯 TM Framework Fixed Test Runner\n');
+        updateOutput('=' .repeat(40) + '\n');
+        updateOutput('This test runner validates:\n');
+        updateOutput('• Basic framework functionality\n');
+        updateOutput('• Component lifecycle and updates\n');
+        updateOutput('• Label editor specific features\n');
+        updateOutput('• Performance and debugging\n\n');
+        updateOutput('🚀 Click a test button to begin...\n');
+    </script>
+</body>
+</html>

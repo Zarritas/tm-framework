@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TM Framework - Simple Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-result {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .pass { border-left: 4px solid #28a745; }
+        .fail { border-left: 4px solid #dc3545; }
+        .info { border-left: 4px solid #17a2b8; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>🧪 TM Framework Simple Test</h1>
+    <p>Quick test to verify framework loading and basic functionality</p>
+    
+    <button onclick="testFrameworkLoad()">Test Framework Load</button>
+    <button onclick="testComponentCreation()">Test Component Creation</button>
+    <button onclick="testStateManagement()">Test State Management</button>
+    <button onclick="testDebugging()">Test Debugging System</button>
+    <button onclick="clearResults()">Clear Results</button>
+    
+    <div id="results"></div>
+
+    <!-- Load TM Framework -->
+    <script src="../dist/tm-framework.js"></script>
+    
+    <script>
+        function addResult(title, message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test-result ${type}`;
+            div.innerHTML = `<strong>${title}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+        
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+        }
+        
+        function testFrameworkLoad() {
+            try {
+                if (typeof TM !== 'undefined') {
+                    addResult('Framework Load', `✅ TM Framework v${TM.version || 'Unknown'} loaded successfully`, 'pass');
+                    
+                    // Check core components
+                    const components = ['Component', 'reactive', 'computed', 'html'];
+                    components.forEach(comp => {
+                        if (TM[comp]) {
+                            addResult(`Component Check`, `✅ ${comp} available`, 'pass');
+                        } else {
+                            addResult(`Component Check`, `❌ ${comp} NOT available`, 'fail');
+                        }
+                    });
+                } else {
+                    addResult('Framework Load', '❌ TM Framework NOT loaded', 'fail');
+                }
+            } catch (error) {
+                addResult('Framework Load', `❌ Error: ${error.message}`, 'fail');
+            }
+        }
+        
+        function testComponentCreation() {
+            try {
+                if (!TM || !TM.Component) {
+                    addResult('Component Creation', '❌ TM.Component not available', 'fail');
+                    return;
+                }
+                
+                class TestComponent extends TM.Component {
+                    static defaultProps = { test: 'value' };
+                    
+                    initialState() {
+                        return { count: 0 };
+                    }
+                    
+                    render() {
+                        return `<div>Test: ${this.state.count}</div>`;
+                    }
+                }
+                
+                const component = new TestComponent();
+                
+                // Test basic properties
+                if (component.props.test === 'value') {
+                    addResult('Component Props', '✅ Default props set correctly', 'pass');
+                } else {
+                    addResult('Component Props', '❌ Default props NOT set', 'fail');
+                }
+                
+                if (component.state.count === 0) {
+                    addResult('Component State', '✅ Initial state set correctly', 'pass');
+                } else {
+                    addResult('Component State', '❌ Initial state NOT set', 'fail');
+                }
+                
+                // Test mounting
+                const container = document.createElement('div');
+                document.body.appendChild(container);
+                component.mount(container);
+                
+                if (component._mounted && component.el) {
+                    addResult('Component Mount', '✅ Component mounted successfully', 'pass');
+                } else {
+                    addResult('Component Mount', '❌ Component mount failed', 'fail');
+                }
+                
+                // Test state change
+                const originalRender = component.render();
+                component.state.count = 1;
+                
+                setTimeout(() => {
+                    if (component.el.textContent.includes('1')) {
+                        addResult('State Reactivity', '✅ State changes trigger re-renders', 'pass');
+                    } else {
+                        addResult('State Reactivity', '❌ State changes NOT triggering re-renders', 'fail');
+                    }
+                    
+                    component.destroy();
+                    container.remove();
+                }, 200);
+                
+                addResult('Component Creation', '✅ Component creation test completed', 'pass');
+                
+            } catch (error) {
+                addResult('Component Creation', `❌ Error: ${error.message}`, 'fail');
+            }
+        }
+        
+        function testStateManagement() {
+            try {
+                if (!TM || !TM.reactive) {
+                    addResult('State Management', '❌ TM.reactive not available', 'fail');
+                    return;
+                }
+                
+                let callCount = 0;
+                const state = TM.reactive({ count: 0 });
+                
+                // Subscribe to changes
+                const unsubscribe = state.__subscribe((prop, newVal, oldVal) => {
+                    callCount++;
+                    console.log(`State changed: ${prop} from ${oldVal} to ${newVal}`);
+                });
+                
+                // Test reactive change
+                state.count = 1;
+                
+                setTimeout(() => {
+                    if (callCount > 0) {
+                        addResult('Reactive State', '✅ Reactive changes trigger subscriptions', 'pass');
+                    } else {
+                        addResult('Reactive State', '❌ Reactive changes NOT triggering subscriptions', 'fail');
+                    }
+                    
+                    unsubscribe();
+                }, 100);
+                
+                // Test computed
+                const doubled = TM.computed(() => state.count * 2, [state]);
+                
+                state.count = 5;
+                
+                setTimeout(() => {
+                    if (doubled() === 10) {
+                        addResult('Computed Values', '✅ Computed values work correctly', 'pass');
+                    } else {
+                        addResult('Computed Values', `❌ Computed value incorrect: ${doubled()}`, 'fail');
+                    }
+                }, 100);
+                
+                addResult('State Management', '✅ State management test completed', 'pass');
+                
+            } catch (error) {
+                addResult('State Management', `❌ Error: ${error.message}`, 'fail');
+            }
+        }
+        
+        function testDebugging() {
+            try {
+                if (!TM || !TM.debug) {
+                    addResult('Debugging System', '❌ TM.debug not available', 'fail');
+                    return;
+                }
+                
+                // Enable debug mode
+                TM.debug.enable();
+                
+                if (TM.debug.enabled) {
+                    addResult('Debug Mode', '✅ Debug mode enabled successfully', 'pass');
+                } else {
+                    addResult('Debug Mode', '❌ Debug mode NOT enabled', 'fail');
+                }
+                
+                // Create a test component with debug info
+                class DebugTestComponent extends TM.Component {
+                    initialState() {
+                        return { value: 'test' };
+                    }
+                    
+                    render() {
+                        return `<div>${this.state.value}</div>`;
+                    }
+                }
+                
+                const component = new DebugTestComponent();
+                component._debugMode = true;
+                
+                // Test debug info
+                const debugInfo = component.getDebugInfo();
+                
+                if (debugInfo && debugInfo.componentId) {
+                    addResult('Debug Info', '✅ Component debug info available', 'pass');
+                } else {
+                    addResult('Debug Info', '❌ Component debug info NOT available', 'fail');
+                }
+                
+                // Test component registry
+                const allComponents = TM.debug.getAllComponentInfo();
+                addResult('Component Registry', `📊 ${allComponents.length} components registered`, 'info');
+                
+                // Disable debug mode
+                TM.debug.disable();
+                
+                if (!TM.debug.enabled) {
+                    addResult('Debug Mode', '✅ Debug mode disabled successfully', 'pass');
+                } else {
+                    addResult('Debug Mode', '❌ Debug mode NOT disabled', 'fail');
+                }
+                
+                addResult('Debugging System', '✅ Debugging system test completed', 'pass');
+                
+            } catch (error) {
+                addResult('Debugging System', `❌ Error: ${error.message}`, 'fail');
+            }
+        }
+        
+        // Auto-run framework load test
+        setTimeout(() => {
+            testFrameworkLoad();
+        }, 500);
+    </script>
+</body>
+</html>

@@ -39,10 +39,10 @@ class LabelEditorTestSuite {
                             throw new Error(message || `Expected not ${expected}, got ${actual}`);
                         }
                     },
-                    async delay: (ms) => {
-                        return new Promise(resolve => setTimeout(resolve, ms));
-                    }
-                };
+                    delay: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
+                    createMockConfigPopup: this.createMockConfigPopup.bind(this),
+                    createMockLabelGroup: this.createMockLabelGroup.bind(this)
+                 };
                 
                 await test.fn(testContext);
                 console.log(`   ✅ ${test.name}`);

@@ -66,7 +66,9 @@ class ComprehensiveTestRunner {
         console.log('='.repeat(60));
         
         const totalDuration = this.results.endTime - this.results.startTime;
-        const successRate = ((this.results.totalPassed / this.results.totalTests) * 100).toFixed(1);
+        const successRate = this.results.totalTests > 0 
+            ? ((this.results.totalPassed / this.results.totalTests) * 100).toFixed(1)
+            : '0.0';
         
         console.log(`\n📈 Overall Results:`);
         console.log(`   Total Tests: ${this.results.totalTests}`);
@@ -78,7 +80,9 @@ class ComprehensiveTestRunner {
         // Suite breakdown
         console.log(`\n📋 Suite Breakdown:`);
         this.results.suites.forEach(suite => {
-            const suiteSuccessRate = ((suite.passed / suite.total) * 100).toFixed(1);
+            const suiteSuccessRate = suite.total > 0 
+                ? ((suite.passed / suite.total) * 100).toFixed(1)
+                : '0.0';
             const status = suite.failed === 0 ? '✅' : '❌';
             console.log(`   ${status} ${suite.name}: ${suite.passed}/${suite.total} (${suiteSuccessRate}%) - ${suite.duration.toFixed(2)}ms`);
         });
@@ -107,7 +111,9 @@ class ComprehensiveTestRunner {
     analyzePerformance() {
         console.log(`\n⚡ Performance Analysis:`);
         
-        const avgTestDuration = this.results.suites.reduce((sum, suite) => sum + suite.duration, 0) / this.results.suites.length;
+        const avgTestDuration = tis.results.suites.length > 0 
+            ? this.results.suites.reduce((sum, suite) => sum + suite.duration, 0) / this.results.suites.length
+            : 0;
         console.log(`   Average Suite Duration: ${avgTestDuration.toFixed(2)}ms`);
         
         // Slow tests (>500ms)
@@ -140,9 +146,13 @@ class ComprehensiveTestRunner {
     }
     
     calculateHealthScore() {
-        const successRate = (this.results.totalPassed / this.results.totalTests) * 100;
-        const avgSuiteDuration = this.results.suites.reduce((sum, suite) => sum + suite.duration, 0) / this.results.suites.length;
-        
+        const successRate = this.results.totalTests > 0
+            ? (this.results.totalPassed / this.results.totalTests) * 100
+            : 0;
+        const avgSuiteDuration = this.results.suites.length > 0
+            ? this.results.suites.reduce((sum, suite) => sum + suite.duration, 0) / this.results.suites.length
+            : 0;
+
         let healthScore = successRate; // Base score on success rate
         
         // Penalty for slow performance
@@ -154,8 +164,8 @@ class ComprehensiveTestRunner {
         if (this.results.totalFailed === 0) healthScore += 5;
         
         // Bonus for fast execution
-        if (avgSuiteDuration < 100) healthScore += 5;
-        else if (avgSuiteDuration < 50) healthScore += 10;
+        if (avgSuiteDuration < 50) healthScore += 10;
+        else if (avgSuiteDuration < 100) healthScore += 5;
         
         healthScore = Math.max(0, Math.min(100, healthScore));
         

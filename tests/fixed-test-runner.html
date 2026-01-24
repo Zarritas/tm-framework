@@ -387,17 +387,23 @@
             updateOutput('=' .repeat(50) + '\n');
             
             await testBasicFramework();
-            Object.assign(allResults, currentResults);
+            allResults.total += currentResults.total;
+            allResults.passed += currentResults.passed;
+            allResults.failed += currentResults.failed;
             
             await new Promise(resolve => setTimeout(resolve, 500));
             
             await testComponent();
-            Object.assign(allResults, currentResults);
+            allResults.total += currentResults.total;
+            allResults.passed += currentResults.passed;
+            allResults.failed += currentResults.failed;
             
             await new Promise(resolve => setTimeout(resolve, 500));
             
             await testLabelEditor();
-            Object.assign(allResults, currentResults);
+            allResults.total += currentResults.total;
+            allResults.passed += currentResults.passed;
+            allResults.failed += currentResults.failed;
             
             updateOutput('\n' + '=' .repeat(50));
             updateOutput('📊 FINAL RESULTS\n');

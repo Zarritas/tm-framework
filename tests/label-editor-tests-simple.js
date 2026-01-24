@@ -18,6 +18,7 @@ class LabelEditorTestSuite {
     }
     
     async runAll() {
+        this.results = { passed: 0, failed: 0, total: 0 };
         console.log('🏷️ Running Label Editor Integration Tests...');
         
         for (const test of this.tests) {
@@ -39,9 +40,7 @@ class LabelEditorTestSuite {
                             throw new Error(message || `Expected not ${expected}, got ${actual}`);
                         }
                     },
-                    async delay: (ms) => {
-                        return new Promise(resolve => setTimeout(resolve, ms));
-                    }
+                    delay: (ms) => new Promise(resolve => setTimeout(resolve, ms))
                 };
                 
                 await test.fn(testContext);
@@ -92,7 +91,7 @@ LabelEditorTestSuite.prototype.testComponentCreation = async function(test) {
     
     const component = new SimpleComponent({ name: 'TestComponent' });
     
-    test.assert(component.props.name === 'test', 'Default props should be set');
+    test.assert(component.props.name === 'TestComponent', 'Props pasadas en el constructor deberían prevalecer sobre defaultProps');
     test.assert(component.state.count === 0, 'Initial state should be set');
     
     const container = document.createElement('div');
@@ -318,8 +317,8 @@ function initializeLabelTestSuite() {
 }
 
 // Initialize immediately if available, otherwise wait
-initializeLabelTestSuite();
 if (typeof window !== 'undefined') {
+    initializeLabelTestSuite();
     setTimeout(initializeLabelTestSuite, 100);
 }
 

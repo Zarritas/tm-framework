@@ -470,12 +470,12 @@ testSuite.test('Component cleanup prevents memory leaks', (test) => {
         }
     }
     
-    const componentId = 'TestComponent_' + Date.now();
     
     // Create component
     const component = new TestComponent();
     component.mount(test.testContainer);
     
+    const componentId = component._componentId;
     test.assert(window[componentId], 'Component should be registered globally');
     
     // Destroy component

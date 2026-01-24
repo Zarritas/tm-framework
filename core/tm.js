@@ -172,17 +172,17 @@ const TM = {
             enabled: false,
             enable() {
                 this.enabled = true;
-                window.TM_DEBUG = true;
+                window?.TM_DEBUG = true;
                 console.log('[TM Debug] Debug mode enabled');
             },
             disable() {
                 this.enabled = false;
-                window.TM_DEBUG = false;
+                window?.TM_DEBUG = false;
                 console.log('[TM Debug] Debug mode disabled');
             },
             getAllComponentInfo() {
                 const components = [];
-                document.querySelectorAll('[data-tm-component]').forEach(el => {
+                document?.querySelectorAll('[data-tm-component]').forEach(el => {
                     const componentId = el.dataset.tmComponent;
                     if (window[componentId] && window[componentId].getDebugInfo) {
                         components.push(window[componentId].getDebugInfo());
@@ -202,7 +202,7 @@ const TM = {
                 return info;
             },
             clearLogs() {
-                document.querySelectorAll('[data-tm-component]').forEach(el => {
+                document?.querySelectorAll('[data-tm-component]').forEach(el => {
                     const componentId = el.dataset.tmComponent;
                     if (window[componentId]) {
                         window[componentId]._componentLogs = [];

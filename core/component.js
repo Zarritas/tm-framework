@@ -32,7 +32,7 @@ const TMComponent = (function() {
             this._componentId = this.constructor.name + '_' + Date.now().toString(36); // Unique ID for logging
             
             // Debug logging
-            this._debugMode = window.TM_DEBUG || false;
+            this._debugMode = window?.TM_DEBUG || false;
             this._updateLog = []; // Track update history
             this._stateChangeLog = []; // Track state changes
             
@@ -248,7 +248,7 @@ const TMComponent = (function() {
             this._userInteracting = false;
             
             // Remove from global registry
-            if (window[this._componentId]) {
+            if (typeof window !== 'undefined' && window[this._componentId]) {
                 delete window[this._componentId];
             }
             
@@ -428,6 +428,8 @@ const TMComponent = (function() {
             // Skip updates if user is actively interacting
             if (this._userInteracting) {
                 this._log('debug', `Update deferred - user interacting (${reason})`);
+                this._updateScheduled = false;
+                this._pendingUpdateReason = reason;
                 return;
             }
             
@@ -452,10 +454,12 @@ const TMComponent = (function() {
         _setUserInteracting(interacting = true) {
             this._userInteracting = interacting;
             
-            if (!interacting && this._updateScheduled) {
+            if (!interacting && this._pendingUpdateReason) {
+                const pendingReason = this._pendingUpdateReason;
+                this._pendingUpdateReason = null
                 // Schedule update when interaction ends
                 this._updateTimeout = setTimeout(() => {
-                    this._scheduleUpdate();
+                    this._scheduleUpdate(pendingReason);
                 }, 100);
             }
         }
@@ -479,7 +483,10 @@ const TMComponent = (function() {
             
             try {
                 // Get current render string
-                const renderString = this.render();
+                const rendered = this.render();
+                const renderString = rendered instanceof HTMLElement
+                    ? rendered.outerHTML
+                    : String(rendered ?? '')
                 
                 // Skip if render is the same as last time
                 if (this._lastRender === renderString) {
@@ -494,11 +501,15 @@ const TMComponent = (function() {
                 const scrollPos = this._el.scrollTop;
                 
                 // Create new element
-                const wrapper = document.createElement('div');
-                wrapper.innerHTML = renderString.trim();
-                const newEl = wrapper.children.length === 1 
-                    ? wrapper.firstElementChild 
-                    : wrapper;
+                const newEl = rendered instanceof HTMLElement
+                    ? rendered
+                    : (() =>{
+                        const wrapper = document.createElement('div');
+                        wrapper.innerHTML = renderString.trim();
+                        return wrapper.children.length === 1
+                            ? wrapper.firstElementChild
+                            : wrapper;
+                    })
                 
                 // Only replace if significantly different
                 if (this._shouldUpdate(this._el, newEl)) {

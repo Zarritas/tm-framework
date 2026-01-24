@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Full Framework
  * Version: 1.0.0
- * Built: 2026-01-24T18:16:56.393Z
+ * Built: 2026-01-24T21:01:11.682Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -169,6 +169,7 @@ const TMComponent = (function() {
             this._updateScheduled = false;
             this._children = new Map();
             this._unsubscribers = [];
+            this._emittingEvents = new Set(); // Prevent infinite recursion
             
             // Auto-subscribe to state changes
             if (this.state.__subscribe) {
@@ -302,11 +303,22 @@ const TMComponent = (function() {
          * @param {*} detail
          */
         emit(eventName, detail = {}) {
-            this._el?.dispatchEvent(new CustomEvent(eventName, {
-                detail,
-                bubbles: true,
-                composed: true
-            }));
+            // Prevent infinite recursion
+            if (this._emittingEvents.has(eventName)) {
+                return;
+            }
+            
+            this._emittingEvents.add(eventName);
+            
+            try {
+                this._el?.dispatchEvent(new CustomEvent(eventName, {
+                    detail,
+                    bubbles: true,
+                    composed: true
+                }));
+            } finally {
+                this._emittingEvents.delete(eventName);
+            }
         }
 
         /**
@@ -322,6 +334,12 @@ const TMComponent = (function() {
         destroy() {
             this.onDestroy();
             
+            // Clear any pending updates
+            if (this._updateTimeout) {
+                clearTimeout(this._updateTimeout);
+                this._updateTimeout = null;
+            }
+            
             // Destroy children
             this._children.forEach(child => child.destroy());
             this._children.clear();
@@ -330,10 +348,14 @@ const TMComponent = (function() {
             this._unsubscribers.forEach(unsub => unsub());
             this._unsubscribers = [];
             
+            // Clear emitting events
+            this._emittingEvents?.clear();
+            
             // Remove from DOM
             this._el?.remove();
             this._el = null;
             this._mounted = false;
+            this._updateScheduled = false;
         }
 
         // ═══════════════════════════════════════════════════════════
@@ -424,7 +446,13 @@ const TMComponent = (function() {
                         const handlerName = attr.value;
                         
                         if (typeof this[handlerName] === 'function') {
-                            node.addEventListener(eventName, (e) => this[handlerName](e));
+                            node.addEventListener(eventName, (e) => {
+                                // Prevent infinite recursion for component-emitted events
+                                if (e.detail?.originalEvent) {
+                                    return; // Skip if this event originated from this component
+                                }
+                                this[handlerName](e);
+                            });
                         } else {
                             console.warn(`[TM Component] Handler "${handlerName}" not found`);
                         }
@@ -447,27 +475,60 @@ const TMComponent = (function() {
             if (!this._mounted || this._updateScheduled) return;
             
             this._updateScheduled = true;
-            requestAnimationFrame(() => {
+            
+            // Debounce updates to prevent excessive re-renders
+            if (this._updateTimeout) {
+                clearTimeout(this._updateTimeout);
+            }
+            
+            this._updateTimeout = setTimeout(() => {
                 this._updateScheduled = false;
                 this._update();
-            });
+                this._updateTimeout = null;
+            }, 16); // ~60fps throttle
         }
 
         _update() {
             if (!this._el || !this._mounted) return;
             
+            // Performance optimization: avoid unnecessary updates
+            const startTime = performance.now();
+            
             // Store scroll position
             const scrollPos = this._el.scrollTop;
             
-            // Re-render
-            const newEl = this._createElement();
-            this._el.replaceWith(newEl);
-            this._el = newEl;
+            try {
+                // Re-render
+                const newEl = this._createElement();
+                
+                // Only replace if actually changed
+                if (!this._elementsEqual(this._el, newEl)) {
+                    this._el.replaceWith(newEl);
+                    this._el = newEl;
+                    
+                    // Restore scroll
+                    this._el.scrollTop = scrollPos;
+                }
+            } catch (error) {
+                console.error('[TM Component] Update error:', error);
+            }
             
-            // Restore scroll
-            this._el.scrollTop = scrollPos;
+            // Warn if update takes too long
+            const updateTime = performance.now() - startTime;
+            if (updateTime > 100) {
+                console.warn(`[TM Component] Slow update detected: ${updateTime.toFixed(2)}ms`);
+            }
             
             this.onUpdate();
+        }
+        
+        _elementsEqual(el1, el2) {
+            if (!el1 || !el2) return false;
+            if (el1 === el2) return true;
+            
+            // Simple optimization: compare outerHTML for now
+            // In a more sophisticated implementation, could do diffing
+            return el1.outerHTML === el2.outerHTML;
         }
     }
 
@@ -709,11 +770,18 @@ const TMUtils = (function() {
     }
 
     /**
-     * Storage wrapper with JSON support
+     * Storage wrapper with JSON support using Tampermonkey APIs
      */
     const storage = {
         get(key, defaultValue = null) {
             try {
+                // Try Tampermonkey API first
+                if (typeof GM_getValue !== 'undefined') {
+                    const item = GM_getValue(key, null);
+                    return item !== null ? JSON.parse(item) : defaultValue;
+                }
+                
+                // Fallback to localStorage
                 const item = localStorage.getItem(key);
                 return item ? JSON.parse(item) : defaultValue;
             } catch {
@@ -723,6 +791,13 @@ const TMUtils = (function() {
         
         set(key, value) {
             try {
+                // Try Tampermonkey API first
+                if (typeof GM_setValue !== 'undefined') {
+                    GM_setValue(key, JSON.stringify(value));
+                    return true;
+                }
+                
+                // Fallback to localStorage
                 localStorage.setItem(key, JSON.stringify(value));
                 return true;
             } catch {
@@ -731,11 +806,30 @@ const TMUtils = (function() {
         },
         
         remove(key) {
-            localStorage.removeItem(key);
+            try {
+                // Try Tampermonkey API first
+                if (typeof GM_deleteValue !== 'undefined') {
+                    GM_deleteValue(key);
+                } else {
+                    localStorage.removeItem(key);
+                }
+            } catch {
+                // Silently fail
+            }
         },
         
         clear() {
-            localStorage.clear();
+            try {
+                // Tampermonkey API doesn't have a direct clear method
+                if (typeof GM_listValues !== 'undefined') {
+                    const keys = GM_listValues();
+                    keys.forEach(key => GM_deleteValue(key));
+                } else {
+                    localStorage.clear();
+                }
+            } catch {
+                // Silently fail
+            }
         }
     };
 

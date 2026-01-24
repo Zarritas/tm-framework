@@ -234,8 +234,8 @@ module.exports = {
     // Print usage instructions
     console.log('📝 Usage in Tampermonkey:');
     console.log('─────────────────────────────────────────');
-    console.log('// @require  https://raw.githubusercontent.com/USER/tm-framework/main/dist/tm-framework.js');
-    console.log('// @resource TM_CSS https://raw.githubusercontent.com/USER/tm-framework/main/dist/tm-styles.css');
+    console.log('// @require  https://raw.githubusercontent.com/Zarritas/tm-framework/main/dist/tm-framework.js');
+    console.log('// @resource TM_CSS https://raw.githubusercontent.com/Zarritas/tm-framework/main/dist/tm-styles.css');
     console.log('─────────────────────────────────────────\n');
 }
 

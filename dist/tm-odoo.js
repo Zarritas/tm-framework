@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Plugin: odoo
  * Version: 1.0.0
- * Built: 2026-01-24T18:16:56.410Z
+ * Built: 2026-01-24T21:01:11.698Z
  * Author: Jesús Lorenzo
  * License: MIT
  */

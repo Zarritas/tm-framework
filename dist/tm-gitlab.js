@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Plugin: gitlab
  * Version: 1.0.0
- * Built: 2026-01-24T18:16:56.408Z
+ * Built: 2026-01-24T21:01:11.697Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -118,7 +118,7 @@
         /**
          * Make authenticated API request
          * @param {string} endpoint - API endpoint (e.g., '/api/v4/projects/123')
-         * @param {Object} options - Fetch options
+         * @param {Object} options - Request options
          */
         async api(endpoint, options = {}) {
             const baseUrl = window.location.origin;
@@ -129,12 +129,51 @@
                 'X-CSRF-Token': this.getCsrfToken()
             };
             
+            const method = options.method || 'GET';
+            const headers = {
+                ...defaultHeaders,
+                ...options.headers
+            };
+            
+            // Use Tampermonkey API if available
+            if (typeof GM_xmlhttpRequest !== 'undefined') {
+                return new Promise((resolve, reject) => {
+                    const requestOptions = {
+                        method,
+                        url,
+                        headers,
+                        onload: function(response) {
+                            try {
+                                const data = JSON.parse(response.responseText);
+                                if (response.status >= 200 && response.status < 300) {
+                                    resolve(data);
+                                } else {
+                                    reject(new Error(`GitLab API error: ${response.status} ${response.statusText}`));
+                                }
+                            } catch (e) {
+                                reject(new Error(`GitLab API parse error: ${e.message}`));
+                            }
+                        },
+                        onerror: function(error) {
+                            reject(new Error(`GitLab API network error: ${error?.message || 'Unknown error'}`));
+                        }
+                    };
+                    
+                    // Add body for non-GET requests
+                    if (method !== 'GET' && options.body) {
+                        requestOptions.data = typeof options.body === 'string' 
+                            ? options.body 
+                            : JSON.stringify(options.body);
+                    }
+                    
+                    GM_xmlhttpRequest(requestOptions);
+                });
+            }
+            
+            // Fallback to fetch
             const response = await fetch(url, {
                 ...options,
-                headers: {
-                    ...defaultHeaders,
-                    ...options.headers
-                }
+                headers
             });
             
             if (!response.ok) {

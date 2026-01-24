@@ -227,11 +227,18 @@ const TMUtils = (function() {
     }
 
     /**
-     * Storage wrapper with JSON support
+     * Storage wrapper with JSON support using Tampermonkey APIs
      */
     const storage = {
         get(key, defaultValue = null) {
             try {
+                // Try Tampermonkey API first
+                if (typeof GM_getValue !== 'undefined') {
+                    const item = GM_getValue(key, null);
+                    return item !== null ? JSON.parse(item) : defaultValue;
+                }
+                
+                // Fallback to localStorage
                 const item = localStorage.getItem(key);
                 return item ? JSON.parse(item) : defaultValue;
             } catch {
@@ -241,6 +248,13 @@ const TMUtils = (function() {
         
         set(key, value) {
             try {
+                // Try Tampermonkey API first
+                if (typeof GM_setValue !== 'undefined') {
+                    GM_setValue(key, JSON.stringify(value));
+                    return true;
+                }
+                
+                // Fallback to localStorage
                 localStorage.setItem(key, JSON.stringify(value));
                 return true;
             } catch {
@@ -249,11 +263,30 @@ const TMUtils = (function() {
         },
         
         remove(key) {
-            localStorage.removeItem(key);
+            try {
+                // Try Tampermonkey API first
+                if (typeof GM_deleteValue !== 'undefined') {
+                    GM_deleteValue(key);
+                } else {
+                    localStorage.removeItem(key);
+                }
+            } catch {
+                // Silently fail
+            }
         },
         
         clear() {
-            localStorage.clear();
+            try {
+                // Tampermonkey API doesn't have a direct clear method
+                if (typeof GM_listValues !== 'undefined') {
+                    const keys = GM_listValues();
+                    keys.forEach(key => GM_deleteValue(key));
+                } else {
+                    localStorage.clear();
+                }
+            } catch {
+                // Silently fail
+            }
         }
     };
 

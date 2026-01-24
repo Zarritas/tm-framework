@@ -272,8 +272,10 @@ Test output will appear here when you run tests...
             document.getElementById('successRate').textContent = 
                 results.total > 0 ? ((results.passed / results.total) * 100).toFixed(1) + '%' : '0%';
             
-            const avgDuration = results.details
-                .reduce((sum, d) => sum + (d.duration || 0), 0) / results.total;
+            const total = results.total || 0;
+            const avgDuration = total > 0
+                ? results.details.reduce((sum, d) => sum + (d.duration || 0), 0) / total
+                : 0;
             document.getElementById('avgDuration').textContent = avgDuration.toFixed(2) + 'ms';
         }
         

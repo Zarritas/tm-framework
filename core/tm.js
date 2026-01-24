@@ -136,7 +136,7 @@ const TM = (function() {
     // PUBLIC API
     // ═══════════════════════════════════════════════════════════════
     
-    const TM = {
+const TM = {
         // Version
         version: '1.0.0',
         
@@ -166,6 +166,53 @@ const TM = (function() {
         parseUrlParams,
         formatDate,
         storage,
+        
+        // Debugging
+        debug: {
+            enabled: false,
+            enable() {
+                this.enabled = true;
+                window.TM_DEBUG = true;
+                console.log('[TM Debug] Debug mode enabled');
+            },
+            disable() {
+                this.enabled = false;
+                window.TM_DEBUG = false;
+                console.log('[TM Debug] Debug mode disabled');
+            },
+            getAllComponentInfo() {
+                const components = [];
+                document.querySelectorAll('[data-tm-component]').forEach(el => {
+                    const componentId = el.dataset.tmComponent;
+                    if (window[componentId] && window[componentId].getDebugInfo) {
+                        components.push(window[componentId].getDebugInfo());
+                    }
+                });
+                return components;
+            },
+            printAllDebugInfo() {
+                const info = this.getAllComponentInfo();
+                console.group('🔍 TM Framework Debug - All Components');
+                info.forEach(comp => {
+                    console.group(`Component: ${comp.componentId}`);
+                    console.log(comp);
+                    console.groupEnd();
+                });
+                console.groupEnd();
+                return info;
+            },
+            clearLogs() {
+                document.querySelectorAll('[data-tm-component]').forEach(el => {
+                    const componentId = el.dataset.tmComponent;
+                    if (window[componentId]) {
+                        window[componentId]._componentLogs = [];
+                        window[componentId]._updateLog = [];
+                        window[componentId]._stateChangeLog = [];
+                    }
+                });
+                console.log('[TM Debug] All component logs cleared');
+            }
+        },
         
         // Styles
         injectStyles,

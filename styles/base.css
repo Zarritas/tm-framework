@@ -1,0 +1,6 @@
+/**
+ * TM Framework - Base Styles
+ */
+
+.tm-component, .tm-component * { box-sizing: border-box; font-family: var(--tm-font); }
+.tm-component { line-height: 1.5; }

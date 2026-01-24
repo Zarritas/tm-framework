@@ -1,0 +1,31 @@
+/**
+ * TM Framework - Toast/Notifications Styles
+ */
+
+.tm-toast-container { position: fixed; bottom: var(--tm-space-lg); right: var(--tm-space-lg); display: flex; flex-direction: column; gap: var(--tm-space-sm); z-index: 10001; max-width: 400px; }
+
+.tm-toast { display: flex; align-items: flex-start; gap: var(--tm-space-md); padding: var(--tm-space-md) var(--tm-space-lg); background: var(--tm-bg); border-radius: var(--tm-radius-lg); box-shadow: var(--tm-shadow-lg); border-left: 4px solid var(--tm-info); animation: tm-slide-in var(--tm-transition-slow); position: relative; overflow: hidden; }
+.tm-toast--success { border-left-color: var(--tm-success); }
+.tm-toast--danger, .tm-toast--error { border-left-color: var(--tm-danger); }
+.tm-toast--warning { border-left-color: var(--tm-warning); }
+.tm-toast--exit { animation: tm-slide-out var(--tm-transition-slow) forwards; }
+
+.tm-toast__icon { font-size: var(--tm-font-size-lg); flex-shrink: 0; }
+.tm-toast__content { flex: 1; min-width: 0; }
+.tm-toast__title { font-weight: 600; margin-bottom: var(--tm-space-xs); }
+.tm-toast__message { font-size: var(--tm-font-size-sm); color: var(--tm-text-secondary); word-wrap: break-word; }
+.tm-toast__close { background: none; border: none; color: var(--tm-text-muted); cursor: pointer; padding: 0; font-size: var(--tm-font-size); }
+.tm-toast__close:hover { color: var(--tm-text); }
+.tm-toast__progress { position: absolute; bottom: 0; left: 0; height: 3px; background: var(--tm-primary); animation: tm-progress linear forwards; }
+
+
+.tm-alert { display: flex; align-items: flex-start; gap: var(--tm-space-md); padding: var(--tm-space-md) var(--tm-space-lg); border-radius: var(--tm-radius-lg); background: var(--tm-info-light); color: var(--tm-info); }
+.tm-alert--success { background: var(--tm-success-light); color: var(--tm-success); }
+.tm-alert--danger { background: var(--tm-danger-light); color: var(--tm-danger); }
+.tm-alert--warning { background: var(--tm-warning-light); color: var(--tm-warning); }
+.tm-alert__icon { font-size: var(--tm-font-size-lg); }
+.tm-alert__content { flex: 1; }
+.tm-alert__title { font-weight: 600; margin-bottom: var(--tm-space-xs); }
+.tm-alert__message { font-size: var(--tm-font-size-sm); }
+.tm-alert__close { background: none; border: none; cursor: pointer; opacity: 0.6; }
+.tm-alert__close:hover { opacity: 1; }

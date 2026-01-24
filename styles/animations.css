@@ -1,0 +1,13 @@
+/**
+ * TM Framework - Animations
+ */
+
+@keyframes tm-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes tm-slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes tm-slide-in { from { opacity: 0; transform: translateX(100%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes tm-slide-out { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(100%); } }
+@keyframes tm-spin { to { transform: rotate(360deg); } }
+@keyframes tm-progress { from { width: 100%; } to { width: 0%; } }
+@keyframes tm-progress-stripes { from { background-position: 1rem 0; } to { background-position: 0 0; } }
+@keyframes tm-progress-indeterminate { 0% { transform: translateX(-100%); } 100% { transform: translateX(400%); } }
+@keyframes tm-skeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }

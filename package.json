@@ -1,0 +1,50 @@
+{
+  "name": "tm-framework",
+  "version": "1.0.0",
+  "description": "Reactive component framework for Tampermonkey userscripts",
+  "author": "Jesús Lorenzo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FlJesusLorenzo/tm-framework.git"
+  },
+  "keywords": [
+    "tampermonkey",
+    "userscript",
+    "components",
+    "framework",
+    "reactive",
+    "ui"
+  ],
+  "scripts": {
+    "build": "node scripts/build.js",
+    "watch": "node scripts/build.js --watch",
+    "dev": "npm run watch",
+    "clean": "rm -rf dist/*",
+    "rebuild": "npm run clean && npm run build",
+    "lint": "eslint core/ components/ plugins/",
+    "format": "prettier --write \"**/*.{js,css,json,md}\"",
+    "prepare": "npm run build"
+  },
+  "files": [
+    "dist/",
+    "core/",
+    "components/",
+    "styles/",
+    "plugins/",
+    "README.md"
+  ],
+  "main": "dist/index.js",
+  "devDependencies": {
+    "eslint": "^8.50.0",
+    "prettier": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "last 2 Firefox versions",
+    "last 2 Edge versions"
+  ]
+}

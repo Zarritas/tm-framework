@@ -1,0 +1,30 @@
+/**
+ * TM Framework - List/Table Styles
+ * This is the combined stylesheet
+ */
+
+.tm-list { border: 1px solid var(--tm-border); border-radius: var(--tm-radius-lg); overflow: hidden; }
+.tm-list--divided .tm-list__item { border-bottom: 1px solid var(--tm-border); }
+.tm-list--divided .tm-list__item:last-child { border-bottom: none; }
+.tm-list__item { display: flex; align-items: center; gap: var(--tm-space-md); padding: var(--tm-space-md) var(--tm-space-lg); }
+.tm-list--hoverable .tm-list__item { transition: background var(--tm-transition); cursor: pointer; }
+.tm-list--hoverable .tm-list__item:hover { background: var(--tm-bg-secondary); }
+.tm-list__item--selected { background: var(--tm-primary-light) !important; }
+.tm-list__item--disabled { opacity: 0.5; cursor: not-allowed !important; }
+.tm-list__content { flex: 1; min-width: 0; }
+.tm-list__title { font-weight: 500; }
+.tm-list__subtitle { font-size: var(--tm-font-size-sm); color: var(--tm-text-secondary); }
+.tm-list__extra { color: var(--tm-text-muted); font-size: var(--tm-font-size-sm); }
+.tm-list__empty { padding: var(--tm-space-xl); text-align: center; color: var(--tm-text-muted); }
+
+.tm-table-wrapper { overflow-x: auto; }
+.tm-table { width: 100%; border-collapse: collapse; }
+.tm-table th, .tm-table td { padding: var(--tm-space-md) var(--tm-space-lg); text-align: left; border-bottom: 1px solid var(--tm-border); }
+.tm-table th { font-weight: 600; background: var(--tm-bg-secondary); }
+.tm-table--striped tbody tr:nth-child(even) { background: var(--tm-bg-secondary); }
+.tm-table--bordered { border: 1px solid var(--tm-border); }
+.tm-table--bordered th, .tm-table--bordered td { border: 1px solid var(--tm-border); }
+.tm-table--hoverable tbody tr { transition: background var(--tm-transition); }
+.tm-table--hoverable tbody tr:hover { background: var(--tm-bg-hover); }
+.tm-table--compact th, .tm-table--compact td { padding: var(--tm-space-sm) var(--tm-space-md); }
+.tm-table__empty { text-align: center; color: var(--tm-text-muted); padding: var(--tm-space-xl) !important; }

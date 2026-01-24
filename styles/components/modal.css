@@ -1,0 +1,23 @@
+/**
+ * TM Framework - Modal Styles
+ * This is the combined stylesheet
+ */
+ 
+.tm-overlay { position: fixed; inset: 0; background: var(--tm-overlay); display: flex; align-items: center; justify-content: center; z-index: 10000; animation: tm-fade-in var(--tm-transition); }
+
+.tm-modal { background: var(--tm-bg); border-radius: var(--tm-radius-xl); box-shadow: var(--tm-shadow-xl); max-width: 90vw; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; animation: tm-slide-up var(--tm-transition-slow); }
+.tm-modal__header { display: flex; align-items: center; justify-content: space-between; padding: var(--tm-space-lg); border-bottom: 1px solid var(--tm-border); }
+.tm-modal__title { margin: 0; font-size: var(--tm-font-size-lg); font-weight: 600; color: var(--tm-text); }
+.tm-modal__close { margin-left: auto; }
+.tm-modal__body { padding: var(--tm-space-lg); overflow-y: auto; flex: 1; }
+.tm-modal__footer { display: flex; justify-content: flex-end; gap: var(--tm-space-sm); padding: var(--tm-space-lg); border-top: 1px solid var(--tm-border); }
+
+/* Drawer */
+.tm-drawer { position: fixed; background: var(--tm-bg); box-shadow: var(--tm-shadow-xl); display: flex; flex-direction: column; animation: tm-slide-in var(--tm-transition-slow); }
+.tm-drawer--right { top: 0; right: 0; height: 100%; }
+.tm-drawer--left { top: 0; left: 0; height: 100%; }
+.tm-drawer--top { top: 0; left: 0; width: 100%; }
+.tm-drawer--bottom { bottom: 0; left: 0; width: 100%; }
+.tm-drawer__header { display: flex; align-items: center; justify-content: space-between; padding: var(--tm-space-lg); border-bottom: 1px solid var(--tm-border); }
+.tm-drawer__title { margin: 0; font-size: var(--tm-font-size-lg); font-weight: 600; }
+.tm-drawer__body { padding: var(--tm-space-lg); overflow-y: auto; flex: 1; }

@@ -499,7 +499,7 @@ globalThis.TMTestSuite = TMTestSuite;
 // Initialize suite only when TM is available
 function initializeComponentTestSuite() {
     if (typeof TM !== 'undefined' && TM.Component && !globalThis.testSuite) {
-        globalThis.testSuite = new TMTestSuite();
+        globalThis.testSuite = testSuite;
         console.log('✅ Core Test Suite initialized with', globalThis.testSuite.tests.length, 'tests');
     }
 }

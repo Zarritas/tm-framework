@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Styles
  * Version: 1.0.0
- * Built: 2026-01-25T21:05:30.461Z
+ * Built: 2026-01-25T21:17:32.755Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -140,66 +140,13 @@
   --tm-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
 
   --tm-overlay: rgba(0, 0, 0, 0.7);
-  --tm-primary: #818cf8;
-  --tm-primary-hover: #6366f1;
-  --tm-primary-light: rgba(99, 102, 241, 0.2);
-  --tm-primary-dark: #a5b4fc;
-
-  --tm-success: #4ade80;
-  --tm-success-hover: #22c55e;
-  --tm-success-light: rgba(34, 197, 94, 0.2);
-
-  --tm-danger: #f87171;
-  --tm-danger-hover: #ef4444;
-  --tm-danger-light: rgba(239, 68, 68, 0.2);
-
-  --tm-warning: #fbbf24;
-  --tm-warning-hover: #f59e0b;
-  --tm-warning-light: rgba(245, 158, 11, 0.2);
-
-  --tm-info: #60a5fa;
-  --tm-info-hover: #3b82f6;
-  --tm-info-light: rgba(59, 130, 246, 0.2);
-
-  --tm-bg: #1f2937;
-  --tm-bg-secondary: #111827;
-  --tm-bg-tertiary: #374151;
-  --tm-bg-hover: #4b5563;
-
-  --tm-text: #f9fafb;
-  --tm-text-secondary: #d1d5db;
-  --tm-text-muted: #9ca3af;
-  --tm-text-inverse: #1f2937;
-
-  --tm-border: #4b5563;
-  --tm-border-hover: #6b7280;
-  --tm-border-focus: #818cf8;
-
-  --tm-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --tm-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
-  --tm-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
-  --tm-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
-
-  --tm-overlay: rgba(0, 0, 0, 0.7);
 }
-
 
 
 /* ═══ styles/base.css ═══ */
 /**
  * TM Framework - Base Styles
  */
-
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
-
-.tm-component,
-.tm-component * {
-  box-sizing: border-box;
-  font-family: var(--tm-font);
-}
-.tm-component {
-  line-height: 1.5;
-}
 
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
 

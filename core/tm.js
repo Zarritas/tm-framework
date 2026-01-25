@@ -177,7 +177,7 @@ const TM = {
             },
             disable() {
                 this.enabled = false;
-                window?.TM_DEBUG = false;
+                globalThis.TM_DEBUG = false;
                 console.log('[TM Debug] Debug mode disabled');
             },
             getAllComponentInfo() {

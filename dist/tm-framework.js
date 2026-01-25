@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Full Framework
  * Version: 1.0.0
- * Built: 2026-01-25T21:05:30.451Z
+ * Built: 2026-01-25T21:17:32.747Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -1593,7 +1593,7 @@ const TM = {
             },
             disable() {
                 this.enabled = false;
-                window?.TM_DEBUG = false;
+                globalThis.TM_DEBUG = false;
                 console.log('[TM Debug] Debug mode disabled');
             },
             getAllComponentInfo() {

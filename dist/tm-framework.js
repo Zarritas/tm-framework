@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Full Framework
  * Version: 1.0.0
- * Built: 2026-01-25T21:17:32.747Z
+ * Built: 2026-01-25T21:47:35.597Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -460,7 +460,7 @@ const TMComponent = (function() {
         }
 
         _processElement(el) {
-            if (!el) return;
+            if (!el || !el.dataset) return;
             
             // Add component identifier for debugging
             el.dataset.tmComponent = this._componentId;

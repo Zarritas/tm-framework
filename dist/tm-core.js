@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Core
  * Version: 1.0.0
- * Built: 2026-01-25T21:05:30.445Z
+ * Built: 2026-01-25T00:26:34.295Z
  * Author: Jesús Lorenzo
  * License: MIT
  */

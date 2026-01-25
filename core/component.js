@@ -317,7 +317,7 @@ const TMComponent = (function() {
         }
 
         _processElement(el) {
-            if (!el) return;
+            if (!el || !el.dataset) return;
             
             // Add component identifier for debugging
             el.dataset.tmComponent = this._componentId;

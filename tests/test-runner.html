@@ -220,13 +220,13 @@ Test output will appear here when you run tests...
                 
                 // Initialize core test suite if available
                 if (typeof TMTestSuite !== 'undefined') {
-                    window.testSuite = new TMTestSuite();
+                    globalThis.testSuite = new TMTestSuite();
                     console.log('✅ Core test suite initialized');
                 }
                 
                 // Initialize label editor test suite if available
                 if (typeof LabelEditorTestSuite !== 'undefined') {
-                    window.labelTestSuite = new LabelEditorTestSuite();
+                    globalThis.labelTestSuite = new LabelEditorTestSuite();
                     console.log('✅ Label editor test suite initialized');
                 }
                 
@@ -312,7 +312,7 @@ Test output will appear here when you run tests...
         }
         
         async function runLabelTests() {
-            if (isRunning || !window.labelTestSuite) return;
+            if (isRunning || !globalThis.labelTestSuite) return;
             
             isRunning = true;
             clearOutput();
@@ -328,7 +328,7 @@ Test output will appear here when you run tests...
             updateOutput('🏷️ Starting Label Editor Integration Tests...\n');
             
             try {
-                const results = await window.labelTestSuite.runAll();
+                const results = await globalThis.labelTestSuite.runAll();
                 
                 updateOutput('\n🏁 Label Editor Tests completed!\n');
                 updateOutput(`📊 Results: ${results.passed}/${results.total} passed\n`);
@@ -361,7 +361,7 @@ Test output will appear here when you run tests...
         }
         
         async function runComprehensiveTests() {
-            if (isRunning || !window.runComprehensiveTests) return;
+            if (isRunning || !globalThis.runComprehensiveTests) return;
             
             isRunning = true;
             clearOutput();
@@ -377,7 +377,7 @@ Test output will appear here when you run tests...
             updateOutput('📊 Starting Comprehensive Test Suite...\n');
             
             try {
-                const results = await window.runComprehensiveTests();
+                const results = await globalThis.runComprehensiveTests();
                 
                 updateOutput('\n🏁 Comprehensive Test Suite completed!\n');
                 updateOutput(`📊 Overall Results: ${results.totalPassed}/${results.totalTests} passed\n`);
@@ -414,7 +414,7 @@ Test output will appear here when you run tests...
         }
         
         async function runTests(category = null) {
-            if (isRunning || !window.testSuite) return;
+            if (isRunning || !globalThis.testSuite) return;
             
             isRunning = true;
             clearOutput();
@@ -432,21 +432,21 @@ Test output will appear here when you run tests...
                 
                 if (category === 'performance') {
                     // Run only performance tests
-                    const performanceTests = window.testSuite.tests.filter(t => t.category === 'performance');
-                    window.testSuite.tests = performanceTests;
-                    results = await window.testSuite.runAll();
+                    const performanceTests = globalThis.testSuite.tests.filter(t => t.category === 'performance');
+                    globalThis.testSuite.tests = performanceTests;
+                    results = await globalThis.testSuite.runAll();
                     // Restore all tests
                     location.reload(); // Simple way to restore
                     return;
                 } else if (category === 'components') {
                     // Run only component tests
-                    const componentTests = window.testSuite.tests.filter(t => t.category === 'component');
-                    window.testSuite.tests = componentTests;
-                    results = await window.testSuite.runAll();
+                    const componentTests = globalThis.testSuite.tests.filter(t => t.category === 'component');
+                    globalThis.testSuite.tests = componentTests;
+                    results = await globalThis.testSuite.runAll();
                     location.reload();
                     return;
                 } else {
-                    results = await window.testSuite.runAll();
+                    results = await globalThis.testSuite.runAll();
                 }
                 
                 updateOutput('\n🏁 Test completed!\n');
@@ -517,13 +517,13 @@ Test output will appear here when you run tests...
                     
                     // Initialize core test suite if available
                     if (typeof TMTestSuite !== 'undefined') {
-                        window.testSuite = new TMTestSuite();
+                        globalThis.testSuite = new TMTestSuite();
                         console.log('✅ Core test suite initialized');
                     }
                     
                     // Initialize label editor test suite if available
                     if (typeof LabelEditorTestSuite !== 'undefined') {
-                        window.labelTestSuite = new LabelEditorTestSuite();
+                        globalThis.labelTestSuite = new LabelEditorTestSuite();
                         console.log('✅ Label editor test suite initialized');
                     }
                     

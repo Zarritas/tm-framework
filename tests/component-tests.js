@@ -149,7 +149,7 @@ class TMTestSuite {
         document.body.appendChild(this.testContainer);
         
         // Enable debug mode for testing
-        window.TM_DEBUG = true;
+        globalThis.TM_DEBUG = true;
         
         // Capture console logs
         console.log = (...args) => {
@@ -494,13 +494,13 @@ if (document.readyState === 'loading') {
 }
 
 // Export for manual testing
-window.TMTestSuite = TMTestSuite;
+globalThis.TMTestSuite = TMTestSuite;
 
 // Initialize suite only when TM is available
 function initializeComponentTestSuite() {
-    if (typeof TM !== 'undefined' && TM.Component && !window.testSuite) {
-        window.testSuite = new TMTestSuite();
-        console.log('✅ Core Test Suite initialized with', window.testSuite.tests.length, 'tests');
+    if (typeof TM !== 'undefined' && TM.Component && !globalThis.testSuite) {
+        globalThis.testSuite = new TMTestSuite();
+        console.log('✅ Core Test Suite initialized with', globalThis.testSuite.tests.length, 'tests');
     }
 }
 

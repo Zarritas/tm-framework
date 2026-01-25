@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Plugin: odoo
  * Version: 1.0.0
- * Built: 2026-01-25T00:26:34.317Z
+ * Built: 2026-01-25T21:05:30.472Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -47,7 +47,7 @@
          * Check if current page is Odoo
          */
         isOdoo() {
-            return window.odoo !== undefined || 
+            return globalThis.odoo !== undefined || 
                    document.querySelector('.o_web_client') !== null ||
                    document.querySelector('script[src*="odoo"]') !== null;
         },
@@ -56,8 +56,8 @@
          * Get Odoo version
          */
         getVersion() {
-            if (window.odoo?.info?.version) {
-                return window.odoo.info.version;
+            if (globalThis.odoo?.info?.version) {
+                return globalThis.odoo.info.version;
             }
             // Try to detect from page
             const versionMeta = document.querySelector('meta[name="odoo-version"]');
@@ -68,7 +68,7 @@
          * Get current page context
          */
         getContext() {
-            const hash = window.location.hash;
+            const hash = globalThis.location.hash;
             const params = new URLSearchParams(hash.replace('#', ''));
             
             return {
@@ -84,8 +84,8 @@
          * Get session info
          */
         getSession() {
-            if (window.odoo?.session_info) {
-                return window.odoo.session_info;
+            if (globalThis.odoo?.session_info) {
+                return globalThis.odoo.session_info;
             }
             return null;
         },
@@ -95,7 +95,7 @@
          */
         getDatabase() {
             return this.config.database || 
-                   window.odoo?.session_info?.db ||
+                   globalThis.odoo?.session_info?.db ||
                    this.getSession()?.db ||
                    '';
         },
@@ -134,7 +134,7 @@
          * @param {Object} params - RPC parameters
          */
         async rpc(url, params = {}) {
-            const baseUrl = this.config.baseUrl || window.location.origin;
+            const baseUrl = this.config.baseUrl || globalThis.location.origin;
             const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
             
             const response = await fetch(fullUrl, {
@@ -427,14 +427,14 @@
          */
         openRecord(model, id, viewType = 'form') {
             const url = `/web#model=${model}&id=${id}&view_type=${viewType}`;
-            window.location.href = url;
+            globalThis.location.href = url;
         },
 
         /**
          * Open timesheet view
          */
         openTimesheets() {
-            window.location.href = '/web#action=hr_timesheet.act_hr_timesheet_line';
+            globalThis.location.href = '/web#action=hr_timesheet.act_hr_timesheet_line';
         }
     };
 
@@ -445,7 +445,7 @@
     if (typeof TM !== 'undefined') {
         TM.use('odoo', Odoo);
     } else {
-        window.TMOdoo = Odoo;
+        globalThis.TMOdoo = Odoo;
     }
 
 })();

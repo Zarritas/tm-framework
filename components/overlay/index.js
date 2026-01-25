@@ -387,11 +387,11 @@
             const menuWidth = 200;  // Approximate
             const menuHeight = this.props.items.length * 36;
             
-            if (x + menuWidth > window.innerWidth - padding) {
-                x = window.innerWidth - menuWidth - padding;
+            if (x + menuWidth > globalThis.innerWidth - padding) {
+                x = globalThis.innerWidth - menuWidth - padding;
             }
-            if (y + menuHeight > window.innerHeight - padding) {
-                y = window.innerHeight - menuHeight - padding;
+            if (y + menuHeight > globalThis.innerHeight - padding) {
+                y = globalThis.innerHeight - menuHeight - padding;
             }
             
             this.state.x = Math.max(padding, x);

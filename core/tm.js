@@ -172,7 +172,7 @@ const TM = {
             enabled: false,
             enable() {
                 this.enabled = true;
-                window?.TM_DEBUG = true;
+                globalThis.TM_DEBUG = true;
                 console.log('[TM Debug] Debug mode enabled');
             },
             disable() {
@@ -231,7 +231,7 @@ const TM = {
 
 // Export to window
 if (typeof window !== 'undefined') {
-    window.TM = TM;
+    globalThis.TM = TM;
 }
 
 // Export for CommonJS (Node.js build)

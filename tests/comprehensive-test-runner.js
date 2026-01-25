@@ -192,8 +192,8 @@ class ComprehensiveTestRunner {
             framework: 'TM Framework v1.0.0',
             environment: {
                 userAgent: navigator.userAgent,
-                url: window.location.href,
-                tmVersion: window.TM?.version || 'Unknown'
+                url: globalThis.location.href,
+                tmVersion: globalThis.TM?.version || 'Unknown'
             },
             results: this.results,
             recommendations: this.generateRecommendations()
@@ -278,10 +278,10 @@ async function runComprehensiveTests() {
 }
 
 // Export for use
-window.ComprehensiveTestRunner = ComprehensiveTestRunner;
-window.runComprehensiveTests = runComprehensiveTests;
+globalThis.ComprehensiveTestRunner = ComprehensiveTestRunner;
+globalThis.runComprehensiveTests = runComprehensiveTests;
 
 // Auto-run if loaded directly
-if (typeof window !== 'undefined' && window.location.pathname.includes('comprehensive-tests')) {
+if (typeof window !== 'undefined' && globalThis.location.pathname.includes('comprehensive-tests')) {
     runComprehensiveTests();
 }

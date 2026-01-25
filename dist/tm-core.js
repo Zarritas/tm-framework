@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Core
  * Version: 1.0.0
- * Built: 2026-01-25T00:26:34.295Z
+ * Built: 2026-01-25T21:05:30.445Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -136,7 +136,7 @@ const TMReactive = (function() {
 
 // Export for concatenation
 if (typeof window !== 'undefined') {
-    window.TMReactive = TMReactive;
+    globalThis.TMReactive = TMReactive;
 }
 
 
@@ -904,7 +904,7 @@ const TMComponent = (function() {
 
 // Export
 if (typeof window !== 'undefined') {
-    window.TMComponent = TMComponent;
+    globalThis.TMComponent = TMComponent;
 }
 
 /* ═══ core/utils.js ═══ */
@@ -1106,7 +1106,7 @@ const TMUtils = (function() {
      * @param {string} url
      * @returns {Object}
      */
-    function parseUrlParams(url = window.location.href) {
+    function parseUrlParams(url = globalThis.location.href) {
         const params = {};
         const searchParams = new URL(url).searchParams;
         for (const [key, value] of searchParams) {
@@ -1219,7 +1219,7 @@ const TMUtils = (function() {
 
 // Export
 if (typeof window !== 'undefined') {
-    window.TMUtils = TMUtils;
+    globalThis.TMUtils = TMUtils;
 }
 
 /* ═══ core/theme.js ═══ */
@@ -1270,7 +1270,7 @@ const TMTheme = (function() {
         },
         
         system: () => {
-            if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+            if (globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches) {
                 return 'dark';
             }
             return 'light';
@@ -1337,7 +1337,7 @@ const TMTheme = (function() {
         updateTheme();
         
         // Watch for system preference changes
-        window.matchMedia?.('(prefers-color-scheme: dark)')
+        globalThis.matchMedia?.('(prefers-color-scheme: dark)')
             .addEventListener('change', () => {
                 if (state.mode === 'auto') updateTheme();
             });
@@ -1410,7 +1410,7 @@ const TMTheme = (function() {
 
 // Export
 if (typeof window !== 'undefined') {
-    window.TMTheme = TMTheme;
+    globalThis.TMTheme = TMTheme;
 }
 
 /* ═══ core/tm.js ═══ */
@@ -1588,7 +1588,7 @@ const TM = {
             enabled: false,
             enable() {
                 this.enabled = true;
-                window?.TM_DEBUG = true;
+                globalThis.TM_DEBUG = true;
                 console.log('[TM Debug] Debug mode enabled');
             },
             disable() {
@@ -1647,7 +1647,7 @@ const TM = {
 
 // Export to window
 if (typeof window !== 'undefined') {
-    window.TM = TM;
+    globalThis.TM = TM;
 }
 
 // Export for CommonJS (Node.js build)

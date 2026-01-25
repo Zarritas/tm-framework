@@ -2,5 +2,13 @@
  * TM Framework - Base Styles
  */
 
-.tm-component, .tm-component * { box-sizing: border-box; font-family: var(--tm-font); }
-.tm-component { line-height: 1.5; }
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+.tm-component,
+.tm-component * {
+  box-sizing: border-box;
+  font-family: var(--tm-font);
+}
+.tm-component {
+  line-height: 1.5;
+}

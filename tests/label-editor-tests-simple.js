@@ -306,12 +306,12 @@ labelTestSuite.test('Label Editor Scenarios', labelTestSuite.testLabelEditorScen
 labelTestSuite.test('DOM Performance', labelTestSuite.testDOMPerformance);
 
 // Export for running
-window.LabelEditorTestSuite = LabelEditorTestSuite;
+globalThis.LabelEditorTestSuite = LabelEditorTestSuite;
 
 // Initialize suite only when TM is available
 function initializeLabelTestSuite() {
-    if (typeof TM !== 'undefined' && TM.Component && !window.labelTestSuite) {
-        window.labelTestSuite = labelTestSuite;
+    if (typeof TM !== 'undefined' && TM.Component && !globalThis.labelTestSuite) {
+        globalThis.labelTestSuite = labelTestSuite;
         console.log('✅ Label Editor Test Suite initialized with', labelTestSuite.tests.length, 'tests');
     }
 }
@@ -323,10 +323,10 @@ if (typeof window !== 'undefined') {
 }
 
 // Auto-run if loaded directly
-if (typeof window !== 'undefined' && window.location.pathname.includes('label-editor-tests')) {
+if (typeof window !== 'undefined' && globalThis.location.pathname.includes('label-editor-tests')) {
     setTimeout(() => {
-        if (window.labelTestSuite) {
-            window.labelTestSuite.runAll();
+        if (globalThis.labelTestSuite) {
+            globalThis.labelTestSuite.runAll();
         }
     }, 1000);
 }

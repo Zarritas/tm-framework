@@ -196,7 +196,7 @@ const TMUtils = (function() {
      * @param {string} url
      * @returns {Object}
      */
-    function parseUrlParams(url = window.location.href) {
+    function parseUrlParams(url = globalThis.location.href) {
         const params = {};
         const searchParams = new URL(url).searchParams;
         for (const [key, value] of searchParams) {
@@ -309,5 +309,5 @@ const TMUtils = (function() {
 
 // Export
 if (typeof window !== 'undefined') {
-    window.TMUtils = TMUtils;
+    globalThis.TMUtils = TMUtils;
 }

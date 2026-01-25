@@ -45,7 +45,7 @@ const TMTheme = (function() {
         },
         
         system: () => {
-            if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
+            if (globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches) {
                 return 'dark';
             }
             return 'light';
@@ -112,7 +112,7 @@ const TMTheme = (function() {
         updateTheme();
         
         // Watch for system preference changes
-        window.matchMedia?.('(prefers-color-scheme: dark)')
+        globalThis.matchMedia?.('(prefers-color-scheme: dark)')
             .addEventListener('change', () => {
                 if (state.mode === 'auto') updateTheme();
             });
@@ -185,5 +185,5 @@ const TMTheme = (function() {
 
 // Export
 if (typeof window !== 'undefined') {
-    window.TMTheme = TMTheme;
+    globalThis.TMTheme = TMTheme;
 }

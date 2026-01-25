@@ -761,5 +761,5 @@ const TMComponent = (function() {
 
 // Export
 if (typeof window !== 'undefined') {
-    window.TMComponent = TMComponent;
+    globalThis.TMComponent = TMComponent;
 }

@@ -127,5 +127,5 @@ const TMReactive = (function() {
 
 // Export for concatenation
 if (typeof window !== 'undefined') {
-    window.TMReactive = TMReactive;
+    globalThis.TMReactive = TMReactive;
 }

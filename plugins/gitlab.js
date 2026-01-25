@@ -27,7 +27,7 @@
          */
         isGitLab() {
             return document.querySelector('meta[content="GitLab"]') !== null ||
-                   window.location.hostname.includes('gitlab');
+                   globalThis.location.hostname.includes('gitlab');
         },
 
         /**
@@ -35,7 +35,7 @@
          * @returns {{ type, namespace, project, id, iid, fullPath }}
          */
         getContext() {
-            const url = window.location.pathname;
+            const url = globalThis.location.pathname;
             const parts = url.split('/').filter(Boolean);
             
             // Detect page type
@@ -73,7 +73,7 @@
                 fullPath,
                 id,
                 iid,
-                url: window.location.href
+                url: globalThis.location.href
             };
         },
 
@@ -114,7 +114,7 @@
          * @param {Object} options - Request options
          */
         async api(endpoint, options = {}) {
-            const baseUrl = window.location.origin;
+            const baseUrl = globalThis.location.origin;
             const url = endpoint.startsWith('http') ? endpoint : `${baseUrl}${endpoint}`;
             
             const defaultHeaders = {
@@ -387,7 +387,7 @@
     if (typeof TM !== 'undefined') {
         TM.use('gitlab', GitLab);
     } else {
-        window.TMGitLab = GitLab;
+        globalThis.TMGitLab = GitLab;
     }
 
 })();

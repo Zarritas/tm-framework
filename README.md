@@ -383,6 +383,13 @@ TM.storage.get("config", {});
 TM.storage.remove("key");
 TM.storage.clear();
 
+// Debug
+TM.debug.enable();              // Activa logs de debug
+TM.debug.disable();             // Desactiva logs de debug
+TM.debug.getAllComponentInfo(); // Info de todos los componentes
+TM.debug.printAllDebugInfo();   // Imprime info en consola
+TM.debug.clearLogs();           // Limpia logs de componentes
+
 // Utilidades
 TM.uid("prefix"); // 'prefix-xyz123'
 TM.escapeHtml("<script>"); // '&lt;script&gt;'

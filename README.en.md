@@ -382,6 +382,15 @@ const throttledFn = TM.throttle(fn, 100);
 // Storage with JSON
 TM.storage.set('config', { theme: 'dark' });
 TM.storage.get('config', {});
+TM.storage.remove('key');
+TM.storage.clear();
+
+// Debug
+TM.debug.enable();              // Enable debug logs
+TM.debug.disable();             // Disable debug logs
+TM.debug.getAllComponentInfo(); // Get all component info
+TM.debug.printAllDebugInfo();   // Print info to console
+TM.debug.clearLogs();           // Clear component logs
 
 // Utilities
 TM.uid('prefix');           // 'prefix-xyz123'

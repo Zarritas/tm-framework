@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Full Framework
  * Version: 1.0.0
- * Built: 2026-01-26T14:22:15.932Z
+ * Built: 2026-01-26T15:16:08.088Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -61,7 +61,7 @@ const TMLogger = (function() {
          * @param {string} [options.prefix] - Log message prefix
          * @param {boolean} [options.timestamps] - Include timestamps
          */
-        configure(options) {
+        configure(options = {}) {
             Object.assign(this.config, options);
         },
 
@@ -208,7 +208,11 @@ const TMReactive = (function() {
                         try {
                             fn(prop, value, oldValue);
                         } catch (e) {
-                            TMLogger.Logger.error('Reactive', 'Listener error', e);
+                            if (typeof TMLogger !== 'undefined' && TMLogger?.Logger?.error) {
+                                TMLogger.Logger.error('Reactive', 'Listener error', e);
+                            } else {
+                                console.error('[TM] [Reactive] Listener error', e);
+                            }
                         }
                     });
                 }
@@ -3303,7 +3307,7 @@ if (typeof module !== 'undefined' && module.exports) {
             if (!item || item.disabled) return;
             
             this.props.onItemClick?.(item, e);
-            this.emit('itemClick', { item });
+            this.emit('item-click', { item });
             
             if (this.props.selectable) {
                 this.selectItem(item);
@@ -3329,19 +3333,29 @@ if (typeof module !== 'undefined' && module.exports) {
         }
 
         /**
-         * Gets the currently selected item(s)
-         * @returns {any|any[]} Selected item (single mode) or array of items (multiple mode)
+         * Gets the currently selected ID(s)
+         * @returns {string|number|null|Array<string|number>} Selected ID (single mode) or array of IDs (multiple mode)
          */
         getSelected() {
             return this.state.selected;
         }
 
         /**
-         * Sets the selected item(s) programmatically
-         * @param {any|any[]} selected - Item or array of items to select
+         * Sets the selected ID(s) programmatically
+         * @param {string|number|null|Array<string|number>} selected - ID or array of IDs to select
          */
         setSelected(selected) {
-            this.state.selected = selected;
+            const { multiple } = this.props;
+
+            // Normalize input based on mode
+            if (multiple) {
+                this.state.selected = Array.isArray(selected) ? selected : (selected != null ? [selected] : []);
+            } else {
+                this.state.selected = Array.isArray(selected) ? selected[0] ?? null : selected;
+            }
+
+            this.props.onSelect?.(this.state.selected, null);
+            this.emit('select', { selected: this.state.selected, item: null });
         }
 
         /**
@@ -3706,16 +3720,22 @@ if (typeof module !== 'undefined' && module.exports) {
          * Expands all accordion panels (except disabled ones)
          */
         expandAll() {
-            this.state.activeKeys = this.props.items
+            const newActiveKeys = this.props.items
                 .filter(i => !i.disabled)
                 .map(i => i.key);
+            this.state.activeKeys = newActiveKeys;
+            this.props.onChange?.(newActiveKeys);
+            this.emit('change', { activeKeys: newActiveKeys });
         }
 
         /**
          * Collapses all accordion panels
          */
         collapseAll() {
-            this.state.activeKeys = [];
+            const newActiveKeys = [];
+            this.state.activeKeys = newActiveKeys;
+            this.props.onChange?.(newActiveKeys);
+            this.emit('change', { activeKeys: newActiveKeys });
         }
     }
 

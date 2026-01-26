@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Core
  * Version: 1.0.0
- * Built: 2026-01-26T14:22:15.927Z
+ * Built: 2026-01-26T15:16:08.084Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -61,7 +61,7 @@ const TMLogger = (function() {
          * @param {string} [options.prefix] - Log message prefix
          * @param {boolean} [options.timestamps] - Include timestamps
          */
-        configure(options) {
+        configure(options = {}) {
             Object.assign(this.config, options);
         },
 
@@ -208,7 +208,11 @@ const TMReactive = (function() {
                         try {
                             fn(prop, value, oldValue);
                         } catch (e) {
-                            TMLogger.Logger.error('Reactive', 'Listener error', e);
+                            if (typeof TMLogger !== 'undefined' && TMLogger?.Logger?.error) {
+                                TMLogger.Logger.error('Reactive', 'Listener error', e);
+                            } else {
+                                console.error('[TM] [Reactive] Listener error', e);
+                            }
                         }
                     });
                 }

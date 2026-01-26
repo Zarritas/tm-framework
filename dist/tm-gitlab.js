@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Plugin: gitlab
  * Version: 1.0.0
- * Built: 2026-01-25T21:47:35.660Z
+ * Built: 2026-01-26T14:22:15.951Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -22,7 +22,7 @@
         
         install(TM) {
             TM.gitlab = this;
-            console.log('[TM GitLab] Plugin installed');
+            TM.Logger.info('GitLab', 'Plugin installed');
         },
 
         // ═══════════════════════════════════════════════════════════════
@@ -349,7 +349,7 @@
             const target = document.querySelector(targetSelector);
             
             if (!target) {
-                console.warn('[TM GitLab] Target element not found:', targetSelector);
+                TM.Logger.warn('GitLab', 'Target element not found', { targetSelector });
                 return null;
             }
             

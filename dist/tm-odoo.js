@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Plugin: odoo
  * Version: 1.0.0
- * Built: 2026-01-25T21:47:35.683Z
+ * Built: 2026-01-26T14:22:15.952Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -28,7 +28,7 @@
         
         install(TM) {
             TM.odoo = this;
-            console.log('[TM Odoo] Plugin installed');
+            TM.Logger.info('Odoo', 'Plugin installed');
         },
 
         /**

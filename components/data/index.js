@@ -235,14 +235,35 @@
             this.emit('select', { selected: this.state.selected, item });
         }
 
+        /**
+         * Gets the currently selected ID(s)
+         * @returns {string|number|null|Array<string|number>} Selected ID (single mode) or array of IDs (multiple mode)
+         */
         getSelected() {
             return this.state.selected;
         }
 
+        /**
+         * Sets the selected ID(s) programmatically
+         * @param {string|number|null|Array<string|number>} selected - ID or array of IDs to select
+         */
         setSelected(selected) {
-            this.state.selected = selected;
+            const { multiple } = this.props;
+
+            // Normalize input based on mode
+            if (multiple) {
+                this.state.selected = Array.isArray(selected) ? selected : (selected != null ? [selected] : []);
+            } else {
+                this.state.selected = Array.isArray(selected) ? selected[0] ?? null : selected;
+            }
+
+            this.props.onSelect?.(this.state.selected, null);
+            this.emit('select', { selected: this.state.selected, item: null });
         }
 
+        /**
+         * Clears the current selection
+         */
         clearSelection() {
             this.state.selected = this.props.multiple ? [] : null;
         }

@@ -1,10 +1,165 @@
 /*!
  * TM Framework - Full Framework
  * Version: 1.0.0
- * Built: 2026-01-25T21:47:35.597Z
+ * Built: 2026-01-26T14:22:15.932Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
+
+/* ═══ core/logger.js ═══ */
+/**
+ * TM Framework - Logger Module
+ * Global logging system with configurable levels
+ *
+ * @module TMLogger
+ * @version 1.0.0
+ */
+
+const TMLogger = (function() {
+    'use strict';
+
+    /**
+     * Logger - Sistema de logging global para el framework
+     *
+     * @example
+     * TM.Logger.configure({ enabled: true, level: 'debug' });
+     * TM.Logger.info('Component', 'Mounted successfully');
+     * TM.Logger.error('Reactive', 'Proxy creation failed', { target });
+     */
+    const Logger = {
+        /**
+         * Logger configuration
+         * @type {Object}
+         */
+        config: {
+            /** @type {boolean} Whether logging is enabled */
+            enabled: false,
+            /** @type {string} Minimum log level: 'debug' | 'info' | 'warn' | 'error' */
+            level: 'warn',
+            /** @type {string} Prefix for all log messages */
+            prefix: '[TM]',
+            /** @type {boolean} Include timestamps in log messages */
+            timestamps: false,
+        },
+
+        /**
+         * Log level priorities (lower = more verbose)
+         * @type {Object}
+         */
+        levels: {
+            debug: 0,
+            info: 1,
+            warn: 2,
+            error: 3,
+        },
+
+        /**
+         * Configure logger settings
+         * @param {Object} options - Configuration options
+         * @param {boolean} [options.enabled] - Enable/disable logging
+         * @param {string} [options.level] - Minimum log level
+         * @param {string} [options.prefix] - Log message prefix
+         * @param {boolean} [options.timestamps] - Include timestamps
+         */
+        configure(options) {
+            Object.assign(this.config, options);
+        },
+
+        /**
+         * Check if a log level should be output
+         * @param {string} level - Log level to check
+         * @returns {boolean} Whether the level should be logged
+         */
+        shouldLog(level) {
+            if (!this.config.enabled) return false;
+            return this.levels[level] >= this.levels[this.config.level];
+        },
+
+        /**
+         * Format a log message with prefix, timestamp, and module
+         * @param {string} module - Module name
+         * @param {string} message - Log message
+         * @returns {string} Formatted message
+         */
+        format(module, message) {
+            const parts = [this.config.prefix];
+            if (this.config.timestamps) {
+                parts.push(new Date().toISOString());
+            }
+            parts.push(`[${module}]`);
+            parts.push(message);
+            return parts.join(' ');
+        },
+
+        /**
+         * Log a message at the specified level
+         * @param {string} level - Log level ('debug' | 'info' | 'warn' | 'error')
+         * @param {string} module - Module name (e.g., 'Component', 'Reactive')
+         * @param {string} message - Log message
+         * @param {any} [data] - Optional additional data to log
+         */
+        log(level, module, message, data) {
+            if (!this.shouldLog(level)) return;
+
+            const formatted = this.format(module, message);
+            const method = level === 'debug' ? 'log' : level;
+
+            if (data !== undefined) {
+                console[method](formatted, data);
+            } else {
+                console[method](formatted);
+            }
+        },
+
+        /**
+         * Log a debug message
+         * @param {string} module - Module name
+         * @param {string} message - Log message
+         * @param {any} [data] - Optional data
+         */
+        debug(module, message, data) {
+            this.log('debug', module, message, data);
+        },
+
+        /**
+         * Log an info message
+         * @param {string} module - Module name
+         * @param {string} message - Log message
+         * @param {any} [data] - Optional data
+         */
+        info(module, message, data) {
+            this.log('info', module, message, data);
+        },
+
+        /**
+         * Log a warning message
+         * @param {string} module - Module name
+         * @param {string} message - Log message
+         * @param {any} [data] - Optional data
+         */
+        warn(module, message, data) {
+            this.log('warn', module, message, data);
+        },
+
+        /**
+         * Log an error message
+         * @param {string} module - Module name
+         * @param {string} message - Log message
+         * @param {any} [data] - Optional data
+         */
+        error(module, message, data) {
+            this.log('error', module, message, data);
+        },
+    };
+
+    return { Logger };
+})();
+
+// Export for CommonJS (Node.js build)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = TMLogger;
+}
+
 
 /* ═══ core/reactive.js ═══ */
 /**
@@ -53,7 +208,7 @@ const TMReactive = (function() {
                         try {
                             fn(prop, value, oldValue);
                         } catch (e) {
-                            console.error('[TM Reactive] Listener error:', e);
+                            TMLogger.Logger.error('Reactive', 'Listener error', e);
                         }
                     });
                 }
@@ -255,7 +410,7 @@ const TMComponent = (function() {
                 container = document.querySelector(container);
             }
             if (!container) {
-                console.error('[TM Component] Container not found');
+                TMLogger.Logger.error('Component', 'Container not found');
                 return this;
             }
             
@@ -505,7 +660,7 @@ const TMComponent = (function() {
                                 this[handlerName](e);
                             });
                         } else {
-                            console.warn(`[TM Component] Handler "${handlerName}" not found`);
+                            TMLogger.Logger.warn('Component', `Handler "${handlerName}" not found`);
                         }
                         
                         node.removeAttribute(attr.name);
@@ -989,7 +1144,8 @@ const TMUtils = (function() {
             // Timeout
             setTimeout(() => {
                 observer.disconnect();
-                reject(new Error(`[TM Utils] Element "${selector}" not found after ${timeout}ms`));
+                TMLogger.Logger.warn('Utils', `Element "${selector}" not found after ${timeout}ms`);
+                reject(new Error(`Element "${selector}" not found after ${timeout}ms`));
             }, timeout);
         });
     }
@@ -1430,9 +1586,10 @@ const TM = (function() {
     // COLLECT MODULES
     // ═══════════════════════════════════════════════════════════════
     
+    const { Logger } = TMLogger;
     const { reactive, computed, watch, ref } = TMReactive;
     const { Component } = TMComponent;
-    const { 
+    const {
         html, classNames, waitForElement, waitForElements,
         debounce, throttle, deepClone, deepMerge,
         uid, escapeHtml, parseUrlParams, formatDate, storage
@@ -1555,7 +1712,10 @@ const TM = (function() {
 const TM = {
         // Version
         version: '1.0.0',
-        
+
+        // Logger
+        Logger,
+
         // Core
         Component,
         
@@ -1817,10 +1977,32 @@ if (typeof module !== 'undefined' && module.exports) {
         }
 
         // Public API
+
+        /**
+         * Gets the current input value
+         * @returns {string} Current input value
+         */
         getValue() { return this.state.value; }
+
+        /**
+         * Sets the input value programmatically
+         * @param {string} val - New value to set
+         */
         setValue(val) { this.state.value = val; }
+
+        /**
+         * Focuses the input element
+         */
         focus() { this.refs.input?.focus(); }
+
+        /**
+         * Removes focus from the input element
+         */
         blur() { this.refs.input?.blur(); }
+
+        /**
+         * Clears the input value
+         */
         clear() { this.state.value = ''; }
     }
 
@@ -2169,6 +2351,10 @@ if (typeof module !== 'undefined' && module.exports) {
             `;
         }
 
+        /**
+         * Opens the modal
+         * @fires open
+         */
         open() {
             this.state.visible = true;
             document.body.style.overflow = 'hidden';
@@ -2176,6 +2362,10 @@ if (typeof module !== 'undefined' && module.exports) {
             this.emit('open');
         }
 
+        /**
+         * Closes the modal
+         * @fires close
+         */
         close() {
             this.state.visible = false;
             this.state.confirmLoading = false;
@@ -2184,10 +2374,14 @@ if (typeof module !== 'undefined' && module.exports) {
             this.emit('close');
         }
 
+        /**
+         * Updates the modal body content
+         * @param {string|Component|HTMLElement} content - New content to display
+         */
         setContent(content) {
             requestAnimationFrame(() => {
                 if (!this.refs.body) return;
-                
+
                 if (typeof content === 'string') {
                     this.refs.body.innerHTML = content;
                 } else if (content instanceof Component) {
@@ -2201,6 +2395,10 @@ if (typeof module !== 'undefined' && module.exports) {
             });
         }
 
+        /**
+         * Sets the confirm button loading state
+         * @param {boolean} loading - Loading state
+         */
         setConfirmLoading(loading) {
             this.state.confirmLoading = loading;
         }
@@ -3105,7 +3303,7 @@ if (typeof module !== 'undefined' && module.exports) {
             if (!item || item.disabled) return;
             
             this.props.onItemClick?.(item, e);
-            this.emit('item-click', { item });
+            this.emit('itemClick', { item });
             
             if (this.props.selectable) {
                 this.selectItem(item);
@@ -3130,14 +3328,25 @@ if (typeof module !== 'undefined' && module.exports) {
             this.emit('select', { selected: this.state.selected, item });
         }
 
+        /**
+         * Gets the currently selected item(s)
+         * @returns {any|any[]} Selected item (single mode) or array of items (multiple mode)
+         */
         getSelected() {
             return this.state.selected;
         }
 
+        /**
+         * Sets the selected item(s) programmatically
+         * @param {any|any[]} selected - Item or array of items to select
+         */
         setSelected(selected) {
             this.state.selected = selected;
         }
 
+        /**
+         * Clears the current selection
+         */
         clearSelection() {
             this.state.selected = this.props.multiple ? [] : null;
         }
@@ -3317,7 +3526,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
         handleHeaderAction(e) {
             this.props.headerAction?.onClick?.(e);
-            this.emit('header-action');
+            this.emit('headerAction');
         }
     }
 
@@ -3493,12 +3702,18 @@ if (typeof module !== 'undefined' && module.exports) {
             this.emit('change', { activeKeys: this.state.activeKeys });
         }
 
+        /**
+         * Expands all accordion panels (except disabled ones)
+         */
         expandAll() {
             this.state.activeKeys = this.props.items
                 .filter(i => !i.disabled)
                 .map(i => i.key);
         }
 
+        /**
+         * Collapses all accordion panels
+         */
         collapseAll() {
             this.state.activeKeys = [];
         }
@@ -3524,13 +3739,13 @@ if (typeof module !== 'undefined' && module.exports) {
 
         initialState() {
             return { 
-                showActions: false 
+                expanded: false 
             };
         }
 
         render() {
             const { icon, text, variant, size, position, offset, tooltip, extended, actions } = this.props;
-            const { showActions } = this.state;
+            const { expanded } = this.state;
             
             const positionStyles = this.getPositionStyles(position, offset);
             
@@ -3539,13 +3754,13 @@ if (typeof module !== 'undefined' && module.exports) {
                 `tm-fab--${variant}`,
                 `tm-fab--${size}`,
                 extended && text && 'tm-fab--extended',
-                showActions && 'tm-fab--open'
+                expanded && 'tm-fab--open'
             );
 
             return html`
                 <div class="tm-fab-wrapper" style="${positionStyles}">
                     ${actions.length ? `
-                        <div class="tm-fab__actions ${showActions ? 'tm-fab__actions--visible' : ''}">
+                        <div class="tm-fab__actions ${expanded ? 'tm-fab__actions--visible' : ''}">
                             ${actions.map((action, i) => `
                                 <button 
                                     class="tm-fab tm-fab--${variant} tm-fab--sm tm-fab__action"
@@ -3560,7 +3775,7 @@ if (typeof module !== 'undefined' && module.exports) {
                         </div>
                     ` : ''}
                     <button class="${classes}" title="${tooltip}" @click="handleClick">
-                        <span class="tm-fab__icon ${showActions ? 'tm-fab__icon--rotate' : ''}">${icon}</span>
+                        <span class="tm-fab__icon ${expanded ? 'tm-fab__icon--rotate' : ''}">${icon}</span>
                         ${extended && text ? `<span class="tm-fab__text">${text}</span>` : ''}
                     </button>
                 </div>
@@ -3580,7 +3795,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
         handleClick(e) {
             if (this.props.actions.length) {
-                this.state.showActions = !this.state.showActions;
+                this.state.expanded = !this.state.expanded;
             } else {
                 this.props.onClick?.(e);
                 this.emit('click');
@@ -3593,19 +3808,19 @@ if (typeof module !== 'undefined' && module.exports) {
             
             action?.onClick?.(e);
             this.emit('action', { action, index });
-            this.state.showActions = false;
+            this.state.expanded = false;
         }
 
         open() {
-            this.state.showActions = true;
+            this.state.expanded = true;
         }
 
         close() {
-            this.state.showActions = false;
+            this.state.expanded = false;
         }
 
         toggle() {
-            this.state.showActions = !this.state.showActions;
+            this.state.expanded = !this.state.expanded;
         }
     }
 

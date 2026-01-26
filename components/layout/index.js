@@ -79,7 +79,7 @@
 
         handleHeaderAction(e) {
             this.props.headerAction?.onClick?.(e);
-            this.emit('header-action');
+            this.emit('headerAction');
         }
     }
 
@@ -255,14 +255,26 @@
             this.emit('change', { activeKeys: this.state.activeKeys });
         }
 
+        /**
+         * Expands all accordion panels (except disabled ones)
+         */
         expandAll() {
-            this.state.activeKeys = this.props.items
+            const newActiveKeys = this.props.items
                 .filter(i => !i.disabled)
                 .map(i => i.key);
+            this.state.activeKeys = newActiveKeys;
+            this.props.onChange?.(newActiveKeys);
+            this.emit('change', { activeKeys: newActiveKeys });
         }
 
+        /**
+         * Collapses all accordion panels
+         */
         collapseAll() {
-            this.state.activeKeys = [];
+            const newActiveKeys = [];
+            this.state.activeKeys = newActiveKeys;
+            this.props.onChange?.(newActiveKeys);
+            this.emit('change', { activeKeys: newActiveKeys });
         }
     }
 
@@ -286,13 +298,13 @@
 
         initialState() {
             return { 
-                showActions: false 
+                expanded: false 
             };
         }
 
         render() {
             const { icon, text, variant, size, position, offset, tooltip, extended, actions } = this.props;
-            const { showActions } = this.state;
+            const { expanded } = this.state;
             
             const positionStyles = this.getPositionStyles(position, offset);
             
@@ -301,13 +313,13 @@
                 `tm-fab--${variant}`,
                 `tm-fab--${size}`,
                 extended && text && 'tm-fab--extended',
-                showActions && 'tm-fab--open'
+                expanded && 'tm-fab--open'
             );
 
             return html`
                 <div class="tm-fab-wrapper" style="${positionStyles}">
                     ${actions.length ? `
-                        <div class="tm-fab__actions ${showActions ? 'tm-fab__actions--visible' : ''}">
+                        <div class="tm-fab__actions ${expanded ? 'tm-fab__actions--visible' : ''}">
                             ${actions.map((action, i) => `
                                 <button 
                                     class="tm-fab tm-fab--${variant} tm-fab--sm tm-fab__action"
@@ -322,7 +334,7 @@
                         </div>
                     ` : ''}
                     <button class="${classes}" title="${tooltip}" @click="handleClick">
-                        <span class="tm-fab__icon ${showActions ? 'tm-fab__icon--rotate' : ''}">${icon}</span>
+                        <span class="tm-fab__icon ${expanded ? 'tm-fab__icon--rotate' : ''}">${icon}</span>
                         ${extended && text ? `<span class="tm-fab__text">${text}</span>` : ''}
                     </button>
                 </div>
@@ -342,7 +354,7 @@
 
         handleClick(e) {
             if (this.props.actions.length) {
-                this.state.showActions = !this.state.showActions;
+                this.state.expanded = !this.state.expanded;
             } else {
                 this.props.onClick?.(e);
                 this.emit('click');
@@ -355,19 +367,19 @@
             
             action?.onClick?.(e);
             this.emit('action', { action, index });
-            this.state.showActions = false;
+            this.state.expanded = false;
         }
 
         open() {
-            this.state.showActions = true;
+            this.state.expanded = true;
         }
 
         close() {
-            this.state.showActions = false;
+            this.state.expanded = false;
         }
 
         toggle() {
-            this.state.showActions = !this.state.showActions;
+            this.state.expanded = !this.state.expanded;
         }
     }
 

@@ -97,6 +97,10 @@
             `;
         }
 
+        /**
+         * Opens the modal
+         * @fires open
+         */
         open() {
             this.state.visible = true;
             document.body.style.overflow = 'hidden';
@@ -104,6 +108,10 @@
             this.emit('open');
         }
 
+        /**
+         * Closes the modal
+         * @fires close
+         */
         close() {
             this.state.visible = false;
             this.state.confirmLoading = false;
@@ -112,10 +120,14 @@
             this.emit('close');
         }
 
+        /**
+         * Updates the modal body content
+         * @param {string|Component|HTMLElement} content - New content to display
+         */
         setContent(content) {
             requestAnimationFrame(() => {
                 if (!this.refs.body) return;
-                
+
                 if (typeof content === 'string') {
                     this.refs.body.innerHTML = content;
                 } else if (content instanceof Component) {
@@ -129,6 +141,10 @@
             });
         }
 
+        /**
+         * Sets the confirm button loading state
+         * @param {boolean} loading - Loading state
+         */
         setConfirmLoading(loading) {
             this.state.confirmLoading = loading;
         }

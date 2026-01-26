@@ -18,6 +18,7 @@ const CONFIG = {
     
     // Core files in order (dependencies first)
     core: [
+        'core/logger.js',
         'core/reactive.js',
         'core/component.js',
         'core/utils.js',

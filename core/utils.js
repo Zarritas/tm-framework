@@ -79,7 +79,8 @@ const TMUtils = (function() {
             // Timeout
             setTimeout(() => {
                 observer.disconnect();
-                reject(new Error(`[TM Utils] Element "${selector}" not found after ${timeout}ms`));
+                TMLogger.Logger.warn('Utils', `Element "${selector}" not found after ${timeout}ms`);
+                reject(new Error(`Element "${selector}" not found after ${timeout}ms`));
             }, timeout);
         });
     }

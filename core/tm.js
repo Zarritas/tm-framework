@@ -14,9 +14,10 @@ const TM = (function() {
     // COLLECT MODULES
     // ═══════════════════════════════════════════════════════════════
     
+    const { Logger } = TMLogger;
     const { reactive, computed, watch, ref } = TMReactive;
     const { Component } = TMComponent;
-    const { 
+    const {
         html, classNames, waitForElement, waitForElements,
         debounce, throttle, deepClone, deepMerge,
         uid, escapeHtml, parseUrlParams, formatDate, storage
@@ -139,7 +140,10 @@ const TM = (function() {
 const TM = {
         // Version
         version: '1.0.0',
-        
+
+        // Logger
+        Logger,
+
         // Core
         Component,
         

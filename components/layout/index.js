@@ -259,16 +259,22 @@
          * Expands all accordion panels (except disabled ones)
          */
         expandAll() {
-            this.state.activeKeys = this.props.items
+            const newActiveKeys = this.props.items
                 .filter(i => !i.disabled)
                 .map(i => i.key);
+            this.state.activeKeys = newActiveKeys;
+            this.props.onChange?.(newActiveKeys);
+            this.emit('change', { activeKeys: newActiveKeys });
         }
 
         /**
          * Collapses all accordion panels
          */
         collapseAll() {
-            this.state.activeKeys = [];
+            const newActiveKeys = [];
+            this.state.activeKeys = newActiveKeys;
+            this.props.onChange?.(newActiveKeys);
+            this.emit('change', { activeKeys: newActiveKeys });
         }
     }
 

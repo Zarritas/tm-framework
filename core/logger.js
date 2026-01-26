@@ -52,7 +52,7 @@ const TMLogger = (function() {
          * @param {string} [options.prefix] - Log message prefix
          * @param {boolean} [options.timestamps] - Include timestamps
          */
-        configure(options) {
+        configure(options = {}) {
             Object.assign(this.config, options);
         },
 

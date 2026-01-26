@@ -38,6 +38,70 @@
 - Añade comentarios para lógica compleja
 - Asegura el manejo adecuado de errores
 
+### Convenciones de Nombrado
+
+| Elemento | Convención | Ejemplo |
+|----------|------------|---------|
+| Clases | PascalCase | `FloatingButton` |
+| Métodos | camelCase | `handleClick()` |
+| Métodos privados | `_camelCase` | `_bindEvents()` |
+| CSS clases | BEM con prefijo `tm-` | `.tm-btn--primary` |
+
+### Eventos Emitidos (camelCase)
+
+Todos los eventos emitidos via `this.emit()` deben usar **camelCase**:
+
+```javascript
+// Correcto
+this.emit('click');
+this.emit('itemClick');
+this.emit('headerAction');
+
+// Incorrecto
+this.emit('item-click');    // kebab-case
+```
+
+### Props de Callback (on + PascalCase)
+
+```javascript
+static defaultProps = {
+    onClick: null,        // Para evento 'click'
+    onItemClick: null,    // Para evento 'itemClick'
+};
+```
+
+### Propiedades de Estado
+
+| Propósito | Nombre | Tipo |
+|-----------|--------|------|
+| Visibilidad | `visible` | `boolean` |
+| Expansión | `expanded` | `boolean` |
+| Selección | `selected` | `any` |
+| Carga | `loading` | `boolean` |
+
+### Logging
+
+Usar `TM.Logger` para todos los logs:
+
+```javascript
+TM.Logger.debug('Module', 'Message', data);
+TM.Logger.info('Module', 'Message', data);
+TM.Logger.warn('Module', 'Message', data);
+TM.Logger.error('Module', 'Message', data);
+```
+
+### JSDoc
+
+Todos los métodos públicos deben tener JSDoc:
+
+```javascript
+/**
+ * Descripción breve
+ * @param {Type} nombre - Descripción
+ * @returns {Type} Descripción
+ */
+```
+
 ## Pruebas
 
 - Escribe pruebas para nuevas funcionalidades

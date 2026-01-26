@@ -112,7 +112,7 @@ const TMComponent = (function() {
                 container = document.querySelector(container);
             }
             if (!container) {
-                console.error('[TM Component] Container not found');
+                TMLogger.Logger.error('Component', 'Container not found');
                 return this;
             }
             
@@ -362,7 +362,7 @@ const TMComponent = (function() {
                                 this[handlerName](e);
                             });
                         } else {
-                            console.warn(`[TM Component] Handler "${handlerName}" not found`);
+                            TMLogger.Logger.warn('Component', `Handler "${handlerName}" not found`);
                         }
                         
                         node.removeAttribute(attr.name);

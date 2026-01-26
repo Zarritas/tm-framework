@@ -44,7 +44,7 @@ const TMReactive = (function() {
                         try {
                             fn(prop, value, oldValue);
                         } catch (e) {
-                            console.error('[TM Reactive] Listener error:', e);
+                            TMLogger.Logger.error('Reactive', 'Listener error', e);
                         }
                     });
                 }

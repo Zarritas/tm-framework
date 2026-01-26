@@ -21,7 +21,7 @@
         
         install(TM) {
             TM.odoo = this;
-            console.log('[TM Odoo] Plugin installed');
+            TM.Logger.info('Odoo', 'Plugin installed');
         },
 
         /**

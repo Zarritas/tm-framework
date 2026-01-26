@@ -159,10 +159,32 @@
         }
 
         // Public API
+
+        /**
+         * Gets the current input value
+         * @returns {string} Current input value
+         */
         getValue() { return this.state.value; }
+
+        /**
+         * Sets the input value programmatically
+         * @param {string} val - New value to set
+         */
         setValue(val) { this.state.value = val; }
+
+        /**
+         * Focuses the input element
+         */
         focus() { this.refs.input?.focus(); }
+
+        /**
+         * Removes focus from the input element
+         */
         blur() { this.refs.input?.blur(); }
+
+        /**
+         * Clears the input value
+         */
         clear() { this.state.value = ''; }
     }
 

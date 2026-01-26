@@ -210,7 +210,7 @@
             if (!item || item.disabled) return;
             
             this.props.onItemClick?.(item, e);
-            this.emit('item-click', { item });
+            this.emit('itemClick', { item });
             
             if (this.props.selectable) {
                 this.selectItem(item);
@@ -235,14 +235,25 @@
             this.emit('select', { selected: this.state.selected, item });
         }
 
+        /**
+         * Gets the currently selected item(s)
+         * @returns {any|any[]} Selected item (single mode) or array of items (multiple mode)
+         */
         getSelected() {
             return this.state.selected;
         }
 
+        /**
+         * Sets the selected item(s) programmatically
+         * @param {any|any[]} selected - Item or array of items to select
+         */
         setSelected(selected) {
             this.state.selected = selected;
         }
 
+        /**
+         * Clears the current selection
+         */
         clearSelection() {
             this.state.selected = this.props.multiple ? [] : null;
         }

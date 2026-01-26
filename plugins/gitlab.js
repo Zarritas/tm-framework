@@ -15,7 +15,7 @@
         
         install(TM) {
             TM.gitlab = this;
-            console.log('[TM GitLab] Plugin installed');
+            TM.Logger.info('GitLab', 'Plugin installed');
         },
 
         // ═══════════════════════════════════════════════════════════════
@@ -342,7 +342,7 @@
             const target = document.querySelector(targetSelector);
             
             if (!target) {
-                console.warn('[TM GitLab] Target element not found:', targetSelector);
+                TM.Logger.warn('GitLab', 'Target element not found', { targetSelector });
                 return null;
             }
             

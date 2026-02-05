@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Plugin: odoo
  * Version: 1.0.0
- * Built: 2026-02-05T15:54:10.831Z
+ * Built: 2026-02-05T16:03:08.295Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -279,12 +279,13 @@
         /**
          * Create timesheet entry
          * @param {Object} data - { projectId, taskId, description, hours, date, employeeId }
+         * @throws {Error} If no employee_id can be resolved
          */
         async createTimesheet(data) {
             const { projectId, taskId, description, hours, date, employeeId } = data;
 
             // Get employee_id: use provided, or fetch from hr.employee
-            let resolvedEmployeeId = employeeId || false;
+            let resolvedEmployeeId = employeeId || null;
             if (!resolvedEmployeeId) {
                 const session = this.getSession();
                 if (session?.uid) {
@@ -299,6 +300,13 @@
                         TM?.Logger?.warn?.('Odoo', 'Could not fetch employee_id', e);
                     }
                 }
+            }
+
+            // Validate employee_id before creating timesheet
+            if (!resolvedEmployeeId) {
+                const errorMsg = 'No employee_id resolved - cannot create timesheet entry';
+                TM?.Logger?.warn?.('Odoo', errorMsg);
+                throw new Error(errorMsg);
             }
 
             const values = {

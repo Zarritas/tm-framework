@@ -104,8 +104,10 @@ const TMTheme = (function() {
         setMode(state.current === 'light' ? 'dark' : 'light');
     }
 
-    // Store observer reference for cleanup
+    // Store observer and listener references for cleanup
     let _themeObserver = null;
+    let _themeMediaQuery = null;
+    let _themeMediaListener = null;
 
     /**
      * Initialize theme system
@@ -115,10 +117,13 @@ const TMTheme = (function() {
         updateTheme();
 
         // Watch for system preference changes
-        globalThis.matchMedia?.('(prefers-color-scheme: dark)')
-            .addEventListener('change', () => {
+        _themeMediaQuery = globalThis.matchMedia?.('(prefers-color-scheme: dark)');
+        if (_themeMediaQuery) {
+            _themeMediaListener = () => {
                 if (state.mode === 'auto') updateTheme();
-            });
+            };
+            _themeMediaQuery.addEventListener('change', _themeMediaListener);
+        }
 
         // Watch for DOM class changes (platform theme toggles)
         _themeObserver = new MutationObserver(() => {
@@ -141,12 +146,20 @@ const TMTheme = (function() {
     }
 
     /**
-     * Cleanup theme system (disconnect observers)
+     * Cleanup theme system (disconnect observers and listeners)
      */
     function destroy() {
+        // Remove MutationObserver
         if (_themeObserver) {
             _themeObserver.disconnect();
             _themeObserver = null;
+        }
+
+        // Remove MediaQueryList listener
+        if (_themeMediaQuery && _themeMediaListener) {
+            _themeMediaQuery.removeEventListener('change', _themeMediaListener);
+            _themeMediaQuery = null;
+            _themeMediaListener = null;
         }
     }
 

@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Full Framework
  * Version: 1.0.0
- * Built: 2026-02-05T15:54:10.812Z
+ * Built: 2026-02-05T16:03:08.286Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -1520,8 +1520,10 @@ const TMTheme = (function() {
         setMode(state.current === 'light' ? 'dark' : 'light');
     }
 
-    // Store observer reference for cleanup
+    // Store observer and listener references for cleanup
     let _themeObserver = null;
+    let _themeMediaQuery = null;
+    let _themeMediaListener = null;
 
     /**
      * Initialize theme system
@@ -1531,10 +1533,13 @@ const TMTheme = (function() {
         updateTheme();
 
         // Watch for system preference changes
-        globalThis.matchMedia?.('(prefers-color-scheme: dark)')
-            .addEventListener('change', () => {
+        _themeMediaQuery = globalThis.matchMedia?.('(prefers-color-scheme: dark)');
+        if (_themeMediaQuery) {
+            _themeMediaListener = () => {
                 if (state.mode === 'auto') updateTheme();
-            });
+            };
+            _themeMediaQuery.addEventListener('change', _themeMediaListener);
+        }
 
         // Watch for DOM class changes (platform theme toggles)
         _themeObserver = new MutationObserver(() => {
@@ -1557,12 +1562,20 @@ const TMTheme = (function() {
     }
 
     /**
-     * Cleanup theme system (disconnect observers)
+     * Cleanup theme system (disconnect observers and listeners)
      */
     function destroy() {
+        // Remove MutationObserver
         if (_themeObserver) {
             _themeObserver.disconnect();
             _themeObserver = null;
+        }
+
+        // Remove MediaQueryList listener
+        if (_themeMediaQuery && _themeMediaListener) {
+            _themeMediaQuery.removeEventListener('change', _themeMediaListener);
+            _themeMediaQuery = null;
+            _themeMediaListener = null;
         }
     }
 
@@ -1691,7 +1704,10 @@ const TMSelector = (function() {
         cacheTTL: options.cacheTTL ?? 5000,
         ...options,
       };
-      this.cache = new Map();
+      // Use WeakMap to isolate cache entries per context object
+      this._cacheByContext = new WeakMap();
+      // Separate cache for document context (can't be WeakMap key)
+      this._documentCache = new Map();
     }
 
     /**
@@ -2027,9 +2043,12 @@ const TMSelector = (function() {
 
     /**
      * Clear cache
+     * Note: WeakMap entries are automatically garbage-collected when context is removed
+     * This only clears the document cache; per-context caches clear when contexts are GC'd
      */
     clearCache() {
-      this.cache.clear();
+      this._documentCache.clear();
+      // WeakMap entries for other contexts will be GC'd automatically
     }
 
     /**
@@ -2171,23 +2190,41 @@ const TMSelector = (function() {
       return mostUsed;
     }
 
+    _getContextCache(context) {
+      if (context === document) {
+        return this._documentCache;
+      }
+      // Get or create a Map for this context object
+      let contextCache = this._cacheByContext.get(context);
+      if (!contextCache) {
+        contextCache = new Map();
+        this._cacheByContext.set(context, contextCache);
+      }
+      return contextCache;
+    }
+
     _getFromCache(key, context) {
-      const cacheKey = `${key}_${context === document ? 'doc' : context.id || 'ctx'}`;
-      const cached = this.cache.get(cacheKey);
+      const contextCache = this._getContextCache(context);
+      // Use key and context.id (if present) for the cache key within this context
+      const cacheKey = context.id ? `${key}_${context.id}` : key;
+      const cached = contextCache.get(cacheKey);
 
       if (cached && Date.now() - cached.time < this.options.cacheTTL) {
         // Verify element is still in DOM
         if (cached.element && document.contains(cached.element)) {
           return cached.element;
         }
+        // Remove stale entry
+        contextCache.delete(cacheKey);
       }
 
       return undefined;
     }
 
     _setCache(key, context, element) {
-      const cacheKey = `${key}_${context === document ? 'doc' : context.id || 'ctx'}`;
-      this.cache.set(cacheKey, {
+      const contextCache = this._getContextCache(context);
+      const cacheKey = context.id ? `${key}_${context.id}` : key;
+      contextCache.set(cacheKey, {
         element,
         time: Date.now(),
       });
@@ -2232,21 +2269,23 @@ const TMSelector = (function() {
       case 'child':
         return anchor.querySelector(selector);
 
-      case 'next':
+      case 'next': {
         let next = anchor.nextElementSibling;
         while (next) {
           if (next.matches(selector)) return next;
           next = next.nextElementSibling;
         }
         return null;
+      }
 
-      case 'prev':
+      case 'prev': {
         let prev = anchor.previousElementSibling;
         while (prev) {
           if (prev.matches(selector)) return prev;
           prev = prev.previousElementSibling;
         }
         return null;
+      }
 
       default:
         return null;

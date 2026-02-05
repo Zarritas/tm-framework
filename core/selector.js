@@ -68,7 +68,10 @@ const TMSelector = (function() {
         cacheTTL: options.cacheTTL ?? 5000,
         ...options,
       };
-      this.cache = new Map();
+      // Use WeakMap to isolate cache entries per context object
+      this._cacheByContext = new WeakMap();
+      // Separate cache for document context (can't be WeakMap key)
+      this._documentCache = new Map();
     }
 
     /**
@@ -404,9 +407,12 @@ const TMSelector = (function() {
 
     /**
      * Clear cache
+     * Note: WeakMap entries are automatically garbage-collected when context is removed
+     * This only clears the document cache; per-context caches clear when contexts are GC'd
      */
     clearCache() {
-      this.cache.clear();
+      this._documentCache.clear();
+      // WeakMap entries for other contexts will be GC'd automatically
     }
 
     /**
@@ -548,23 +554,41 @@ const TMSelector = (function() {
       return mostUsed;
     }
 
+    _getContextCache(context) {
+      if (context === document) {
+        return this._documentCache;
+      }
+      // Get or create a Map for this context object
+      let contextCache = this._cacheByContext.get(context);
+      if (!contextCache) {
+        contextCache = new Map();
+        this._cacheByContext.set(context, contextCache);
+      }
+      return contextCache;
+    }
+
     _getFromCache(key, context) {
-      const cacheKey = `${key}_${context === document ? 'doc' : context.id || 'ctx'}`;
-      const cached = this.cache.get(cacheKey);
+      const contextCache = this._getContextCache(context);
+      // Use key and context.id (if present) for the cache key within this context
+      const cacheKey = context.id ? `${key}_${context.id}` : key;
+      const cached = contextCache.get(cacheKey);
 
       if (cached && Date.now() - cached.time < this.options.cacheTTL) {
         // Verify element is still in DOM
         if (cached.element && document.contains(cached.element)) {
           return cached.element;
         }
+        // Remove stale entry
+        contextCache.delete(cacheKey);
       }
 
       return undefined;
     }
 
     _setCache(key, context, element) {
-      const cacheKey = `${key}_${context === document ? 'doc' : context.id || 'ctx'}`;
-      this.cache.set(cacheKey, {
+      const contextCache = this._getContextCache(context);
+      const cacheKey = context.id ? `${key}_${context.id}` : key;
+      contextCache.set(cacheKey, {
         element,
         time: Date.now(),
       });
@@ -609,21 +633,23 @@ const TMSelector = (function() {
       case 'child':
         return anchor.querySelector(selector);
 
-      case 'next':
+      case 'next': {
         let next = anchor.nextElementSibling;
         while (next) {
           if (next.matches(selector)) return next;
           next = next.nextElementSibling;
         }
         return null;
+      }
 
-      case 'prev':
+      case 'prev': {
         let prev = anchor.previousElementSibling;
         while (prev) {
           if (prev.matches(selector)) return prev;
           prev = prev.previousElementSibling;
         }
         return null;
+      }
 
       default:
         return null;

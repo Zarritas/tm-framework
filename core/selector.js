@@ -584,7 +584,7 @@ const TMSelector = (function() {
     _getFromCache(key, context) {
       const contextCache = this._getContextCache(context);
       // Use key and context.id (if present) for the cache key within this context
-      const cacheKey = context.id ? `${key}_${context.id}` : key;
+      const cacheKey = context?.id ? `${key}_${context.id}` : key;
       const cached = contextCache.get(cacheKey);
 
       if (cached && Date.now() - cached.time < this.options.cacheTTL) {
@@ -601,7 +601,7 @@ const TMSelector = (function() {
 
     _setCache(key, context, element) {
       const contextCache = this._getContextCache(context);
-      const cacheKey = context.id ? `${key}_${context.id}` : key;
+      const cacheKey = context?.id ? `${key}_${context.id}` : key;
       contextCache.set(cacheKey, {
         element,
         time: Date.now(),

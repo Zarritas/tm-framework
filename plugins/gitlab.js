@@ -26,8 +26,18 @@
          * Check if current page is GitLab
          */
         isGitLab() {
-            return document.querySelector('meta[content="GitLab"]') !== null ||
-                   globalThis.location.hostname.includes('gitlab');
+            // Prioritize meta tag (most reliable)
+            if (document.querySelector('meta[content="GitLab"]')) {
+                return true;
+            }
+
+            // Fallback: verify hostname more strictly
+            const hostname = globalThis.location.hostname;
+            return hostname === 'gitlab.com' ||
+                   hostname.endsWith('.gitlab.com') ||
+                   hostname.startsWith('gitlab.') ||
+                   // Self-hosted: check for GitLab-specific elements
+                   document.querySelector('.navbar-gitlab, [data-testid="super-sidebar"]') !== null;
         },
 
         /**

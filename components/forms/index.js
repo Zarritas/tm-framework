@@ -7,7 +7,7 @@
     'use strict';
     
     const { Component } = TM;
-    const { html, classNames } = TM;
+    const { html, classNames, escapeAttr } = TM;
 
     // ═══════════════════════════════════════════════════════════════
     // BUTTON
@@ -115,12 +115,12 @@
                     ${label ? `<label class="tm-label">${label}${required ? ' <span class="tm-required">*</span>' : ''}</label>` : ''}
                     <div class="${wrapperClasses}">
                         ${prefix ? `<span class="tm-input__prefix">${prefix}</span>` : ''}
-                        <input 
+                        <input
                             ref="input"
                             class="${inputClasses}"
                             type="${type}"
-                            value="${this.state.value}"
-                            placeholder="${placeholder}"
+                            value="${escapeAttr(this.state.value)}"
+                            placeholder="${escapeAttr(placeholder)}"
                             ${disabled ? 'disabled' : ''}
                             ${readonly ? 'readonly' : ''}
                             ${required ? 'required' : ''}
@@ -217,15 +217,15 @@
             return html`
                 <div class="tm-form-group tm-component">
                     ${label ? `<label class="tm-label">${label}</label>` : ''}
-                    <textarea 
+                    <textarea
                         ref="textarea"
                         class="tm-input tm-textarea ${error ? 'tm-input--error' : ''}"
-                        placeholder="${placeholder}"
+                        placeholder="${escapeAttr(placeholder)}"
                         rows="${rows}"
                         ${disabled ? 'disabled' : ''}
                         ${maxLength ? `maxlength="${maxLength}"` : ''}
                         @input="handleInput"
-                    >${this.state.value}</textarea>
+                    >${escapeAttr(this.state.value)}</textarea>
                     <div class="tm-textarea__footer">
                         ${error ? `<span class="tm-error">${error}</span>` : ''}
                         ${helper && !error ? `<span class="tm-helper">${helper}</span>` : ''}
@@ -288,7 +288,7 @@
             const optionsHtml = normalizedOptions.map(opt => {
                 const selected = opt.value === this.state.value ? 'selected' : '';
                 const optDisabled = opt.disabled ? 'disabled' : '';
-                return `<option value="${opt.value}" ${selected} ${optDisabled}>${opt.label}</option>`;
+                return `<option value="${escapeAttr(opt.value)}" ${selected} ${optDisabled}>${escapeAttr(opt.label)}</option>`;
             }).join('');
 
             return html`
@@ -301,7 +301,7 @@
                         ${required ? 'required' : ''}
                         @change="handleChange"
                     >
-                        <option value="" disabled ${!this.state.value ? 'selected' : ''}>${placeholder}</option>
+                        <option value="" disabled hidden ${!this.state.value ? 'selected' : ''}>${escapeAttr(placeholder)}</option>
                         ${optionsHtml}
                     </select>
                     ${error ? `<span class="tm-error">${error}</span>` : ''}

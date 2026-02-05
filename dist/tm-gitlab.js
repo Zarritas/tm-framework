@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Plugin: gitlab
  * Version: 1.0.0
- * Built: 2026-01-26T15:16:08.094Z
+ * Built: 2026-02-05T15:54:10.831Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -33,8 +33,18 @@
          * Check if current page is GitLab
          */
         isGitLab() {
-            return document.querySelector('meta[content="GitLab"]') !== null ||
-                   globalThis.location.hostname.includes('gitlab');
+            // Prioritize meta tag (most reliable)
+            if (document.querySelector('meta[content="GitLab"]')) {
+                return true;
+            }
+
+            // Fallback: verify hostname more strictly
+            const hostname = globalThis.location.hostname;
+            return hostname === 'gitlab.com' ||
+                   hostname.endsWith('.gitlab.com') ||
+                   hostname.startsWith('gitlab.') ||
+                   // Self-hosted: check for GitLab-specific elements
+                   document.querySelector('.navbar-gitlab, [data-testid="super-sidebar"]') !== null;
         },
 
         /**

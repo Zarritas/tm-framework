@@ -23,6 +23,7 @@ const CONFIG = {
         'core/component.js',
         'core/utils.js',
         'core/theme.js',
+        'core/selector.js',
         'core/tm.js'
     ],
     

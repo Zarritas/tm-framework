@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Core
  * Version: 1.0.0
- * Built: 2026-02-05T16:03:08.280Z
+ * Built: 2026-02-05T16:11:02.367Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -1876,8 +1876,18 @@ const TMSelector = (function() {
       } = options;
 
       return new Promise((resolve, reject) => {
+        // Safe wrapper for this.get() to handle throwOnMiss exceptions
+        const safeGet = (k, ctx) => {
+          try {
+            return this.get(k, ctx);
+          } catch (e) {
+            // If throwOnMiss is active, get() may throw - return null instead
+            return null;
+          }
+        };
+
         // Check immediately
-        const immediate = this.get(key, context);
+        const immediate = safeGet(key, context);
         if (immediate) return resolve(immediate);
 
         const startTime = Date.now();
@@ -1893,7 +1903,7 @@ const TMSelector = (function() {
 
         // Set up observer
         const observer = new MutationObserver(() => {
-          const el = this.get(key, context);
+          const el = safeGet(key, context);
           if (el) {
             cleanup();
             if (this.options.logHits) {
@@ -1920,7 +1930,7 @@ const TMSelector = (function() {
 
         // Also poll as backup (some mutations might be missed)
         pollId = setInterval(() => {
-          const el = this.get(key, context);
+          const el = safeGet(key, context);
           if (el) {
             cleanup();
             if (this.options.logHits) {
@@ -2191,14 +2201,18 @@ const TMSelector = (function() {
     }
 
     _getContextCache(context) {
-      if (context === document) {
+      // Normalize invalid context values to document to prevent WeakMap TypeError
+      const normalizedContext =
+        context != null && typeof context === 'object' ? context : document;
+
+      if (normalizedContext === document) {
         return this._documentCache;
       }
       // Get or create a Map for this context object
-      let contextCache = this._cacheByContext.get(context);
+      let contextCache = this._cacheByContext.get(normalizedContext);
       if (!contextCache) {
         contextCache = new Map();
-        this._cacheByContext.set(context, contextCache);
+        this._cacheByContext.set(normalizedContext, contextCache);
       }
       return contextCache;
     }

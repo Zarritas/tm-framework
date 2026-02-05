@@ -295,20 +295,21 @@
                 }
             }
 
-            // Validate employee_id before creating timesheet
-            if (!resolvedEmployeeId) {
-                const errorMsg = 'No employee_id resolved - cannot create timesheet entry';
+            // Convert to integer and validate employee_id before creating timesheet
+            const employeeIdInt = parseInt(resolvedEmployeeId, 10);
+            if (!Number.isFinite(employeeIdInt) || employeeIdInt <= 0) {
+                const errorMsg = 'No valid employee_id resolved - cannot create timesheet entry';
                 TM?.Logger?.warn?.('Odoo', errorMsg);
                 throw new Error(errorMsg);
             }
 
             const values = {
-                project_id: parseInt(projectId),
-                task_id: taskId ? parseInt(taskId) : false,
+                project_id: parseInt(projectId, 10),
+                task_id: taskId ? parseInt(taskId, 10) : false,
                 name: description,
                 unit_amount: parseFloat(hours),
                 date: date || new Date().toISOString().split('T')[0],
-                employee_id: resolvedEmployeeId
+                employee_id: employeeIdInt
             };
 
             return this.create('account.analytic.line', values);

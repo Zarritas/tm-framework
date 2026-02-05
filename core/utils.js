@@ -193,6 +193,22 @@ const TMUtils = (function() {
     }
 
     /**
+     * Escape string for use in HTML attributes
+     * Prevents XSS when interpolating values into attributes
+     * @param {string} str
+     * @returns {string}
+     */
+    function escapeAttr(str) {
+        if (str == null) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+    }
+
+    /**
      * Parse URL parameters
      * @param {string} url
      * @returns {Object}
@@ -302,6 +318,7 @@ const TMUtils = (function() {
         deepMerge,
         uid,
         escapeHtml,
+        escapeAttr,
         parseUrlParams,
         formatDate,
         storage

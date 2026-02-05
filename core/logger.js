@@ -146,6 +146,11 @@ const TMLogger = (function() {
     return { Logger };
 })();
 
+// Export for browser
+if (typeof window !== 'undefined') {
+    globalThis.TMLogger = TMLogger;
+}
+
 // Export for CommonJS (Node.js build)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = TMLogger;

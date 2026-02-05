@@ -104,35 +104,50 @@ const TMTheme = (function() {
         setMode(state.current === 'light' ? 'dark' : 'light');
     }
 
+    // Store observer reference for cleanup
+    let _themeObserver = null;
+
     /**
      * Initialize theme system
      */
     function init() {
         // Initial detection
         updateTheme();
-        
+
         // Watch for system preference changes
         globalThis.matchMedia?.('(prefers-color-scheme: dark)')
             .addEventListener('change', () => {
                 if (state.mode === 'auto') updateTheme();
             });
-        
+
         // Watch for DOM class changes (platform theme toggles)
-        const observer = new MutationObserver(() => {
+        _themeObserver = new MutationObserver(() => {
             if (state.mode === 'auto') updateTheme();
         });
-        
-        observer.observe(document.body, {
+
+        _themeObserver.observe(document.body, {
             attributes: true,
             attributeFilter: ['class', 'data-color-scheme', 'data-theme']
         });
-        
-        observer.observe(document.documentElement, {
+
+        _themeObserver.observe(document.documentElement, {
             attributes: true,
             attributeFilter: ['class', 'data-color-mode', 'data-theme']
         });
-        
-        console.log(`[TM Theme] Initialized: ${state.current} (platform: ${state.platform})`);
+
+        if (typeof TMLogger !== 'undefined') {
+            TMLogger.Logger.info('Theme', `Initialized: ${state.current} (platform: ${state.platform})`);
+        }
+    }
+
+    /**
+     * Cleanup theme system (disconnect observers)
+     */
+    function destroy() {
+        if (_themeObserver) {
+            _themeObserver.disconnect();
+            _themeObserver = null;
+        }
     }
 
     /**
@@ -167,13 +182,14 @@ const TMTheme = (function() {
     return {
         state,
         init,
+        destroy,
         setMode,
         toggle,
         detectTheme,
         getCssVar,
         setCssVar,
         addDetector,
-        
+
         // Getters
         get mode() { return state.mode; },
         get current() { return state.current; },

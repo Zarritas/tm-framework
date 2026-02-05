@@ -8,6 +8,9 @@ const TMComponent = (function() {
 
     const { reactive } = TMReactive;
 
+    // Counter for unique component IDs
+    let _componentCounter = 0;
+
     class Component {
         /**
          * Default props (override in subclass)
@@ -29,7 +32,7 @@ const TMComponent = (function() {
             this._emittingEvents = new Set(); // Prevent infinite recursion
             this._lastRender = null; // Cache last render for diffing
             this._updateCount = 0; // Track update frequency
-            this._componentId = this.constructor.name + '_' + Date.now().toString(36); // Unique ID for logging
+            this._componentId = `${this.constructor.name}_${Date.now().toString(36)}_${(++_componentCounter).toString(36)}`;
             
             // Debug logging
             this._debugMode = window?.TM_DEBUG || false;
@@ -456,7 +459,7 @@ const TMComponent = (function() {
             
             if (!interacting && this._pendingUpdateReason) {
                 const pendingReason = this._pendingUpdateReason;
-                this._pendingUpdateReason = null
+                this._pendingUpdateReason = null;
                 // Schedule update when interaction ends
                 this._updateTimeout = setTimeout(() => {
                     this._scheduleUpdate(pendingReason);
@@ -503,14 +506,14 @@ const TMComponent = (function() {
                 // Create new element
                 const newEl = rendered instanceof HTMLElement
                     ? rendered
-                    : (() =>{
+                    : (() => {
                         const wrapper = document.createElement('div');
                         wrapper.innerHTML = renderString.trim();
                         return wrapper.children.length === 1
                             ? wrapper.firstElementChild
                             : wrapper;
-                    })
-                
+                    })();
+
                 // Only replace if significantly different
                 if (this._shouldUpdate(this._el, newEl)) {
                     this._log('info', `Update ${updateId} - DOM CHANGED, replacing element`);
@@ -518,26 +521,26 @@ const TMComponent = (function() {
                     // Process new element before replacing
                     this._processElement(newEl);
                     
-                    // Store old element info for comparison
+                    // Store old element info for comparison (with safety checks)
                     const oldInfo = {
-                        tagName: this._el.tagName,
-                        className: this._el.className,
-                        childCount: this._el.children.length,
-                        innerHTMLLength: this._el.innerHTML.length
+                        tagName: this._el?.tagName || 'unknown',
+                        className: this._el?.className || '',
+                        childCount: this._el?.children?.length ?? 0,
+                        innerHTMLLength: this._el?.innerHTML?.length ?? 0
                     };
-                    
+
                     // Replace element
                     this._el.replaceWith(newEl);
                     this._el = newEl;
-                    
+
                     // Restore scroll
-                    this._el.scrollTop = scrollPos;
-                    
+                    if (this._el) this._el.scrollTop = scrollPos;
+
                     const newInfo = {
-                        tagName: this._el.tagName,
-                        className: this._el.className,
-                        childCount: this._el.children.length,
-                        innerHTMLLength: this._el.innerHTML.length
+                        tagName: this._el?.tagName || 'unknown',
+                        className: this._el?.className || '',
+                        childCount: this._el?.children?.length ?? 0,
+                        innerHTMLLength: this._el?.innerHTML?.length ?? 0
                     };
                     
                     this._log('info', `Update ${updateId} - REPLACEMENT COMPLETE`, { old: oldInfo, new: newInfo });
@@ -720,25 +723,31 @@ const TMComponent = (function() {
         }
         
         _shouldUpdate(oldEl, newEl) {
+            // Safety checks for null/undefined elements
             if (!oldEl || !newEl) return true;
-            
+
+            // Safety check for elements without children property (text nodes, etc.)
+            const oldChildren = oldEl.children;
+            const newChildren = newEl.children;
+            if (!oldChildren || !newChildren) return true;
+
             // Compare class names
             if (oldEl.className !== newEl.className) return true;
-            
+
             // Compare text content for simple elements
-            if (oldEl.children.length === 0 && newEl.children.length === 0) {
+            if (oldChildren.length === 0 && newChildren.length === 0) {
                 return oldEl.textContent !== newEl.textContent;
             }
-            
+
             // For complex elements, check child count difference
-            if (oldEl.children.length !== newEl.children.length) return true;
-            
+            if (oldChildren.length !== newChildren.length) return true;
+
             // Additional basic checks
             if (oldEl.innerHTML !== newEl.innerHTML) {
                 // More detailed diffing for complex structures
                 return this._hasSignificantChanges(oldEl, newEl);
             }
-            
+
             return false;
         }
         

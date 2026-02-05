@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Plugin: odoo
  * Version: 1.0.0
- * Built: 2026-01-26T15:16:08.094Z
+ * Built: 2026-02-05T15:54:10.831Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -278,21 +278,38 @@
 
         /**
          * Create timesheet entry
-         * @param {Object} data - { projectId, taskId, description, hours, date }
+         * @param {Object} data - { projectId, taskId, description, hours, date, employeeId }
          */
         async createTimesheet(data) {
-            const { projectId, taskId, description, hours, date } = data;
-            const user = this.getCurrentUser();
-            
+            const { projectId, taskId, description, hours, date, employeeId } = data;
+
+            // Get employee_id: use provided, or fetch from hr.employee
+            let resolvedEmployeeId = employeeId || false;
+            if (!resolvedEmployeeId) {
+                const session = this.getSession();
+                if (session?.uid) {
+                    try {
+                        const employees = await this.search('hr.employee', [
+                            ['user_id', '=', session.uid]
+                        ], { fields: ['id'], limit: 1 });
+                        if (employees.length > 0) {
+                            resolvedEmployeeId = employees[0].id;
+                        }
+                    } catch (e) {
+                        TM?.Logger?.warn?.('Odoo', 'Could not fetch employee_id', e);
+                    }
+                }
+            }
+
             const values = {
                 project_id: parseInt(projectId),
                 task_id: taskId ? parseInt(taskId) : false,
                 name: description,
                 unit_amount: parseFloat(hours),
                 date: date || new Date().toISOString().split('T')[0],
-                employee_id: user?.id || false
+                employee_id: resolvedEmployeeId
             };
-            
+
             return this.create('account.analytic.line', values);
         },
 

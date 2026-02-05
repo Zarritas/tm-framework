@@ -20,9 +20,12 @@ const TM = (function() {
     const {
         html, classNames, waitForElement, waitForElements,
         debounce, throttle, deepClone, deepMerge,
-        uid, escapeHtml, parseUrlParams, formatDate, storage
+        uid, escapeHtml, escapeAttr, parseUrlParams, formatDate, storage
     } = TMUtils;
     const theme = TMTheme;
+    const {
+        SelectorManager, findByText, findRelative, createQuery
+    } = TMSelector;
 
     // ═══════════════════════════════════════════════════════════════
     // STYLE INJECTION
@@ -155,7 +158,14 @@ const TM = {
         
         // Theme
         theme,
-        
+
+        // Selectors
+        SelectorManager,
+        Selectors: new SelectorManager('TM'),  // Default instance
+        findByText,
+        findRelative,
+        createQuery,
+
         // Utilities
         html,
         classNames,
@@ -167,6 +177,7 @@ const TM = {
         deepMerge,
         uid,
         escapeHtml,
+        escapeAttr,
         parseUrlParams,
         formatDate,
         storage,

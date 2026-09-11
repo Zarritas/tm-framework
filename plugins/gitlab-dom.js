@@ -66,8 +66,24 @@
         commentSubmit: {
             'work-item': ['[data-testid="confirm-button"]'],
             classic: ['.js-comment-button', '[data-testid="confirm-button"]']
-        }
+        },
+        // The fixed breadcrumb bar at the very top of the page. Identical in
+        // both layouts, and the only container that stays in the viewport
+        // while scrolling: the work item header scrolls away, taking GitLab's
+        // own Edit button with it.
+        topBar: [
+            '[data-testid="top-bar"] .top-bar-container',
+            '.top-bar-fixed .top-bar-container',
+            '[data-testid="top-bar"]'
+        ]
     };
+
+    /**
+     * Per-page selector overrides added at runtime by a userscript, so a
+     * GitLab upgrade can be patched without waiting for a framework release.
+     * See GitLabDOM.override().
+     */
+    const OVERRIDES = {};
 
     const GitLabDOM = {
         name: 'gitlab-dom',
@@ -98,6 +114,49 @@
          */
         getVersion() {
             return globalThis.gon?.version || globalThis.gon?.gitlab_version || null;
+        },
+
+        /**
+         * GitLab version as numbers, e.g. { major: 18, minor: 2, patch: 8 }.
+         * All zeros when the page does not report a version.
+         */
+        getVersionParts() {
+            const raw = this.getVersion() || '';
+            const [major = 0, minor = 0, patch = 0] = raw.split('.').map(n => parseInt(n, 10) || 0);
+            return { major, minor, patch };
+        },
+
+        /**
+         * Is the running GitLab at least this version?
+         *
+         * Use it only for behaviour that genuinely depends on the release
+         * (an API field, a removed endpoint). Do NOT use it to pick DOM
+         * selectors: GitLab ships layouts behind feature flags and staged
+         * rollouts, and on 18.2.8 a single instance already serves the work
+         * item layout for issues and the classic one for merge requests.
+         * getLayout() reads the DOM for exactly that reason.
+         */
+        atLeast(major, minor = 0, patch = 0) {
+            const v = this.getVersionParts();
+            if (v.major !== major) return v.major > major;
+            if (v.minor !== minor) return v.minor > minor;
+            return v.patch >= patch;
+        },
+
+        /**
+         * Add selector candidates for a key at runtime, tried before the
+         * built-in ones. Lets a userscript patch a GitLab upgrade on its own:
+         *
+         *   TMGitLabDOM.override('labelsBlock', '[data-testid="nuevo-id"]');
+         *
+         * @param {string} key
+         * @param {string|string[]} selectors
+         */
+        override(key, selectors) {
+            if (!SELECTORS[key]) throw new Error(`[GitLabDOM] Unknown selector key: ${key}`);
+            const list = Array.isArray(selectors) ? selectors : [selectors];
+            OVERRIDES[key] = [...(OVERRIDES[key] || []), ...list];
+            return this;
         },
 
         /**
@@ -136,8 +195,10 @@
         candidates(key) {
             const entry = SELECTORS[key];
             if (!entry) throw new Error(`[GitLabDOM] Unknown selector key: ${key}`);
-            if (typeof entry === 'string') return [entry];
-            if (Array.isArray(entry)) return entry;
+
+            const overrides = OVERRIDES[key] || [];
+            if (typeof entry === 'string') return [...overrides, entry];
+            if (Array.isArray(entry)) return [...overrides, ...entry];
 
             const layout = this.getLayout();
             const preferred = entry[layout] || [];
@@ -145,7 +206,7 @@
                 .filter(k => k !== layout)
                 .flatMap(k => entry[k]);
 
-            return [...preferred, ...rest];
+            return [...overrides, ...preferred, ...rest];
         },
 
         /**
@@ -158,8 +219,25 @@
                     if (root.querySelector(selector)) return selector;
                 } catch (e) { /* malformed selector, try the next one */ }
             }
+            this._warnUnresolved(key);
             return null;
         },
+
+        /**
+         * Warn once per key when no candidate matched. This is the early
+         * signal that a GitLab upgrade moved something: it names the version,
+         * the layout and the key, so the fix is one override() away.
+         */
+        _warnUnresolved(key) {
+            if (this._warned.has(key)) return;
+            this._warned.add(key);
+            console.warn(
+                `[GitLabDOM] No selector matched "${key}" on GitLab ${this.getVersion() || '?'} ` +
+                `(layout: ${this.getLayout()}). Tried: ${this.candidates(key).join(', ')}`
+            );
+        },
+
+        _warned: new Set(),
 
         /**
          * @returns {Element|null}
@@ -357,20 +435,35 @@
         // ═══════════════════════════════════════════════════════════════
 
         /**
-         * The element new buttons are placed next to, plus how to place them.
-         * @returns {{ anchor: Element, mode: 'before'|'after'|'append' }|null}
+         * Where a new button goes, and how to place it.
+         *
+         * 'topbar' (default): the fixed breadcrumb bar, so the button stays
+         *   on screen while scrolling. The work item header is NOT sticky —
+         *   GitLab's own Edit button scrolls out of view with it — so this is
+         *   the only placement that survives a scroll.
+         * 'header': next to Edit / the to-do button, matching GitLab's own
+         *   controls. Scrolls away with the header.
+         *
+         * @param {'topbar'|'header'} placement
+         * @returns {{ anchor: Element, mode: 'before'|'after'|'append', size: 'sm'|'md' }|null}
          */
-        getActionBarAnchor() {
+        getActionBarAnchor(placement = 'topbar') {
+            if (placement === 'topbar') {
+                const bar = this.query('topBar');
+                if (bar) return { anchor: bar, mode: 'append', size: 'sm' };
+                // Older GitLab without the fixed top bar: fall back to the header.
+            }
+
             const layout = this.getLayout();
 
             if (layout === LAYOUT.WORK_ITEM) {
                 // Header row: [Edit] [icon] [More actions]. Sit left of Edit.
                 const edit = document.querySelector('[data-testid="work-item-edit-form-button"]');
-                if (edit) return { anchor: edit, mode: 'before' };
+                if (edit) return { anchor: edit, mode: 'before', size: 'md' };
 
                 const actions = document.querySelector('[data-testid="work-item-actions-dropdown"]');
                 if (actions?.parentElement?.parentElement) {
-                    return { anchor: actions.parentElement, mode: 'before' };
+                    return { anchor: actions.parentElement, mode: 'before', size: 'md' };
                 }
             }
 
@@ -378,24 +471,33 @@
             // .merge-request-tabs-actions on MRs, NOT .issuable-sidebar-header,
             // which is why the old compound selector never matched.
             const todo = document.querySelector('[data-testid="sidebar-todo"]');
-            if (todo?.parentElement) return { anchor: todo, mode: 'after' };
+            if (todo?.parentElement) return { anchor: todo, mode: 'after', size: 'md' };
 
             const header = document.querySelector('.detail-page-header-actions, .issuable-sidebar-header');
-            if (header) return { anchor: header, mode: 'append' };
+            if (header) return { anchor: header, mode: 'append', size: 'md' };
 
             return null;
         },
 
         /**
          * Create a button styled like GitLab's own.
-         * @param {{ id, text, title, onClick }} options
+         * @param {{ id, text, title, onClick, size, iconUrl }} options
          */
-        createButton({ id, text = '', title = '', onClick }) {
+        createButton({ id, text = '', title = '', onClick, size = 'md', iconUrl = '' }) {
             const btn = document.createElement('button');
             btn.type = 'button';
             if (id) btn.id = id;
             if (title) btn.title = title;
-            btn.className = 'btn gl-button btn-default btn-md btn-default-secondary';
+            btn.className = `btn gl-button btn-default btn-${size} btn-default-secondary gl-shrink-0`;
+
+            if (iconUrl) {
+                const img = document.createElement('img');
+                img.src = iconUrl;
+                img.alt = '';
+                // The top bar is only 48px tall, so the icon has to follow the size.
+                img.height = size === 'sm' ? 16 : 25;
+                btn.appendChild(img);
+            }
 
             const label = document.createElement('span');
             label.className = 'gl-button-text';
@@ -409,19 +511,24 @@
         /**
          * Inject a button into the page action bar. Idempotent: if a button
          * with the same id is already mounted, nothing happens.
+         *
+         * Defaults to the fixed top bar so the button survives scrolling;
+         * pass placement: 'header' to sit next to GitLab's own controls.
+         *
+         * @param {{ id, text, title, onClick, iconUrl, placement }} options
          * @returns {Element|null} the button, or null if there was nowhere to put it
          */
         injectButton(options = {}) {
-            const { id } = options;
+            const { id, placement = 'topbar' } = options;
             if (id && document.getElementById(id)) {
                 return document.getElementById(id);
             }
 
-            const target = this.getActionBarAnchor();
+            const target = this.getActionBarAnchor(placement);
             if (!target) return null;
 
-            const btn = this.createButton(options);
-            const { anchor, mode } = target;
+            const { anchor, mode, size } = target;
+            const btn = this.createButton({ size, ...options });
 
             if (mode === 'before') anchor.before(btn);
             else if (mode === 'after') anchor.after(btn);

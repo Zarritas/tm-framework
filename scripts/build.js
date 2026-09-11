@@ -54,6 +54,7 @@ const CONFIG = {
     
     // Plugin files
     plugins: [
+        'plugins/gitlab-dom.js',
         'plugins/gitlab.js',
         'plugins/odoo.js'
     ]
@@ -223,6 +224,7 @@ module.exports = {
         framework: 'tm-framework.js',
         styles: 'tm-styles.css',
         plugins: {
+            gitlabDom: 'tm-gitlab-dom.js',
             gitlab: 'tm-gitlab.js',
             odoo: 'tm-odoo.js'
         }

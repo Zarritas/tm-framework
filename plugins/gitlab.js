@@ -1,10 +1,27 @@
 /**
  * TM Framework - GitLab Plugin
  * Helpers for interacting with GitLab pages and API
+ *
+ * Every DOM selector lives in plugins/gitlab-dom.js (TMGitLabDOM), which
+ * resolves them against the page layout: GitLab 18.x renders issues with the
+ * new "work item" view and merge requests with the legacy sidebar. Load
+ * gitlab-dom.js before this file.
  */
 
 (function() {
     'use strict';
+
+    /**
+     * The shared selector module. Never cached: on a SPA navigation the layout
+     * can change between an issue and a merge request.
+     */
+    function dom() {
+        const mod = globalThis.TMGitLabDOM;
+        if (!mod) {
+            throw new Error('[GitLab] TMGitLabDOM not loaded. @require plugins/gitlab-dom.js first.');
+        }
+        return mod;
+    }
 
     const GitLab = {
         name: 'gitlab',
@@ -26,22 +43,7 @@
          * Check if current page is GitLab
          */
         isGitLab() {
-            // Prioritize meta tag (most reliable)
-            if (document.querySelector('meta[content="GitLab"]')) {
-                return true;
-            }
-
-            const hostname = globalThis.location.hostname;
-
-            // Official GitLab domains
-            if (hostname === 'gitlab.com' || hostname.endsWith('.gitlab.com')) {
-                return true;
-            }
-
-            // Self-hosted: MUST have GitLab-specific DOM elements
-            // Don't rely on hostname.startsWith('gitlab.') alone to avoid false positives
-            const hasGitLabDOM = document.querySelector('.navbar-gitlab, [data-testid="super-sidebar"]') !== null;
-            return hasGitLabDOM;
+            return dom().isGitLab();
         },
 
         /**
@@ -49,65 +51,44 @@
          * @returns {{ type, namespace, project, id, iid, fullPath }}
          */
         getContext() {
+            const base = dom().getContext();
             const url = globalThis.location.pathname;
             const parts = url.split('/').filter(Boolean);
-            
-            // Detect page type
-            let type = 'unknown';
+
+            // gitlab-dom only classifies issuables; add the page types that
+            // only this plugin cares about.
+            let type = base.type;
             let id = null;
-            let iid = null;
-            
-            if (url.includes('/-/issues/')) {
-                type = 'issue';
-                iid = parts[parts.indexOf('issues') + 1];
-            } else if (url.includes('/-/merge_requests/')) {
-                type = 'merge_request';
-                iid = parts[parts.indexOf('merge_requests') + 1];
-            } else if (url.includes('/-/pipelines/')) {
-                type = 'pipeline';
-                id = parts[parts.indexOf('pipelines') + 1];
-            } else if (url.includes('/-/jobs/')) {
-                type = 'job';
-                id = parts[parts.indexOf('jobs') + 1];
-            } else if (url.includes('/-/boards')) {
-                type = 'board';
-            } else if (url.includes('/-/tree/') || url.includes('/-/blob/')) {
-                type = 'repository';
+
+            if (type === 'unknown') {
+                if (url.includes('/-/pipelines/')) {
+                    type = 'pipeline';
+                    id = parts[parts.indexOf('pipelines') + 1];
+                } else if (url.includes('/-/jobs/')) {
+                    type = 'job';
+                    id = parts[parts.indexOf('jobs') + 1];
+                } else if (url.includes('/-/boards')) {
+                    type = 'board';
+                } else if (url.includes('/-/tree/') || url.includes('/-/blob/')) {
+                    type = 'repository';
+                }
             }
-            
-            // Extract project path
-            const projectMatch = url.match(/^\/(.+?)\/-\//);
-            const fullPath = projectMatch ? projectMatch[1] : null;
-            const pathParts = fullPath ? fullPath.split('/') : [];
-            
-            return {
-                type,
-                namespace: pathParts.slice(0, -1).join('/'),
-                project: pathParts[pathParts.length - 1],
-                fullPath,
-                id,
-                iid,
-                url: globalThis.location.href
-            };
+
+            return { ...base, type, id };
         },
 
         /**
          * Get project ID from page
          */
         getProjectId() {
-            // Try meta tag first
-            const meta = document.querySelector('meta[name="project-id"]');
-            if (meta) return meta.content;
-            
-            // Try body data attribute
-            const body = document.body;
-            if (body.dataset.projectId) return body.dataset.projectId;
-            
-            // Try from page data
-            const pageData = document.querySelector('[data-page]');
-            if (pageData?.dataset.projectId) return pageData.dataset.projectId;
-            
-            return null;
+            return dom().getProjectId();
+        },
+
+        /**
+         * Get full project path, e.g. "odoo-16/fl-v16"
+         */
+        getProjectPath() {
+            return dom().getProjectPath();
         },
 
         // ═══════════════════════════════════════════════════════════════
@@ -118,8 +99,7 @@
          * Get CSRF token for API requests
          */
         getCsrfToken() {
-            const meta = document.querySelector('meta[name="csrf-token"]');
-            return meta?.content || '';
+            return dom().getCsrfToken();
         },
 
         /**
@@ -234,36 +214,36 @@
         // ═══════════════════════════════════════════════════════════════
         
         /**
-         * Common GitLab selectors
+         * Common GitLab selectors, resolved for the current page layout.
+         * Kept as a getter for backwards compatibility: the values change
+         * between an issue (work item) and a merge request (classic).
          */
-        selectors: {
-            sidebar: '.issuable-sidebar',
-            sidebarLabels: '[data-testid="sidebar-labels"]',
-            sidebarTodo: '[data-testid="sidebar-todo"]',
-            noteForm: '.js-main-target-form',
-            noteTextarea: '.js-note-text',
-            markdownEditor: '.md-area',
-            submitButton: '.js-comment-button',
-            labelsDropdown: '.js-labels-block .dropdown',
-            currentLabels: '.issuable-show-labels .gl-label'
+        get selectors() {
+            const d = dom();
+            return {
+                sidebar: d.resolve('sidebar') || d.candidates('sidebar')[0],
+                sidebarLabels: d.resolve('labelsBlock') || d.candidates('labelsBlock')[0],
+                noteTextarea: d.resolve('commentEditor') || d.candidates('commentEditor')[0],
+                submitButton: d.resolve('commentSubmit') || d.candidates('commentSubmit')[0],
+                currentLabels: d.resolve('currentLabel') || d.candidates('currentLabel')[0],
+                labelsEdit: d.resolve('labelsEditButton') || d.candidates('labelsEditButton')[0],
+                title: d.resolve('title') || d.candidates('title')[0],
+                notes: d.resolve('notes') || d.candidates('notes')[0]
+            };
         },
 
         /**
          * Get sidebar element
          */
         getSidebar() {
-            return document.querySelector(this.selectors.sidebar);
+            return dom().query('sidebar');
         },
 
         /**
          * Get current labels from sidebar
          */
         getCurrentLabels() {
-            const labels = document.querySelectorAll(this.selectors.currentLabels);
-            return Array.from(labels).map(el => ({
-                name: el.querySelector('.gl-label-text')?.textContent?.trim(),
-                color: el.style.backgroundColor || el.dataset.color
-            })).filter(l => l.name);
+            return dom().getCurrentLabels();
         },
 
         /**
@@ -271,24 +251,35 @@
          * @param {string} action - Quick action (e.g., '/label ~bug')
          */
         insertQuickAction(action) {
+            const d = dom();
+
+            // On the work item view (GitLab >= 18.x issues) the comment field
+            // is a TipTap/ProseMirror contenteditable, not a <textarea>:
+            // assigning .value is a silent no-op. Fail loudly instead, and use
+            // updateLabels() / the REST API for label changes there.
+            if (d.getLayout() === d.LAYOUT.WORK_ITEM) {
+                TM.Logger.warn('GitLab', 'Quick actions are not supported on the work item view; use the API instead');
+                return false;
+            }
+
             const textarea = document.querySelector(this.selectors.noteTextarea);
-            if (!textarea) return false;
-            
+            if (!textarea || typeof textarea.value !== 'string') return false;
+
             // Switch to plain text mode if in rich text
             const plainTextBtn = document.querySelector('[data-testid="plain-text-button"]');
             if (plainTextBtn && !plainTextBtn.classList.contains('active')) {
                 plainTextBtn.click();
             }
-            
+
             // Preserve existing content
             const existingContent = textarea.value.trim();
-            const newContent = existingContent 
+            const newContent = existingContent
                 ? `${existingContent}\n\n${action}`
                 : action;
-            
+
             textarea.value = newContent;
             textarea.dispatchEvent(new Event('input', { bubbles: true }));
-            
+
             return true;
         },
 
@@ -296,7 +287,7 @@
          * Submit current comment form
          */
         submitComment() {
-            const button = document.querySelector(this.selectors.submitButton);
+            const button = dom().query('commentSubmit');
             if (button && !button.disabled) {
                 button.click();
                 return true;
@@ -336,61 +327,71 @@
         /**
          * Wait for sidebar to be ready
          */
-        async waitForSidebar(timeout = 5000) {
-            return TM.waitForElement(this.selectors.sidebar, timeout);
+        async waitForSidebar(timeout = 10000) {
+            return dom().waitFor('sidebar', timeout);
         },
 
         /**
-         * Add button to sidebar
-         * @param {Object} options - { text, icon, onClick, position }
+         * Add button to the page action bar.
+         *
+         * The old implementation anchored on [data-testid="sidebar-todo"],
+         * which no longer exists on issues and moved out of
+         * .issuable-sidebar-header on merge requests. gitlab-dom resolves the
+         * right anchor per layout.
+         *
+         * @param {Object} options - { id, text, icon, onClick }
          */
         addSidebarButton(options = {}) {
-            const { text = '', icon = '', onClick, position = 'todo' } = options;
-            
-            const positionSelectors = {
-                todo: this.selectors.sidebarTodo,
-                labels: this.selectors.sidebarLabels
-            };
-            
-            const targetSelector = positionSelectors[position] || position;
-            const target = document.querySelector(targetSelector);
-            
-            if (!target) {
-                TM.Logger.warn('GitLab', 'Target element not found', { targetSelector });
-                return null;
+            const { id, text = '', icon = '', onClick } = options;
+            const label = [icon, text].filter(Boolean).join(' ');
+
+            const btn = dom().injectButton({ id, text: label, title: text, onClick });
+            if (!btn) {
+                TM.Logger.warn('GitLab', 'No action bar found to inject button into');
             }
-            
-            const btn = new TM.Button({
-                text,
-                icon,
-                variant: 'secondary',
-                size: 'sm',
-                onClick
-            });
-            
-            btn.insertAfter(target);
             return btn;
         },
 
         /**
-         * Add button next to labels edit button
+         * Add button next to the labels edit button
          */
         addLabelsButton(options = {}) {
-            const labelsBlock = document.querySelector('.js-labels-block, [data-testid="sidebar-labels"]');
-            if (!labelsBlock) return null;
-            
-            const editBtn = labelsBlock.querySelector('.js-sidebar-dropdown-toggle, .edit-link');
-            if (!editBtn) return null;
-            
+            const d = dom();
+            const editBtn = d.query('labelsEditButton');
+
+            if (editBtn) {
+                const btn = new TM.Button({
+                    icon: options.icon || '\u{1F3F7}\uFE0F',
+                    variant: 'ghost',
+                    size: 'sm',
+                    onClick: options.onClick
+                });
+                btn.insertAfter(editBtn);
+                return btn;
+            }
+
+            const labelsBlock = d.query('labelsBlock');
+            if (!labelsBlock) {
+                TM.Logger.warn('GitLab', 'Labels block not found');
+                return null;
+            }
+
             const btn = new TM.Button({
-                icon: options.icon || '🏷️',
+                icon: options.icon || '\u{1F3F7}\uFE0F',
                 variant: 'ghost',
                 size: 'sm',
                 onClick: options.onClick
             });
-            
-            btn.insertAfter(editBtn);
+            btn.mount(labelsBlock);
             return btn;
+        },
+
+        /**
+         * Run a callback on load and on every SPA navigation / re-render.
+         * See TMGitLabDOM.onPage.
+         */
+        onPage(callback, options = {}) {
+            return dom().onPage(callback, options);
         }
     };
 

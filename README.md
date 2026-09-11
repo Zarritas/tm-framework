@@ -269,6 +269,63 @@ tabs.setTabContent("general", "<p>Contenido general</p>");
 
 ## 🔌 Plugins
 
+### GitLab DOM Plugin (`TMGitLabDOM`)
+
+Fuente única de los selectores del DOM de GitLab. Desde GitLab 18.x conviven
+**dos layouts**: las issues usan la vista *work item* (Vue) y los merge requests
+siguen con el `.issuable-sidebar` clásico. Este módulo detecta cuál está activo
+y resuelve cada selector con fallback al otro layout, así que la futura
+migración de los MRs no obliga a tocar nada.
+
+Verificado contra **GitLab 18.2.8**.
+
+```javascript
+// Qué layout estamos viendo
+TMGitLabDOM.getLayout(); // 'work-item' | 'classic' | 'unknown'
+TMGitLabDOM.getVersion(); // '18.2.8'
+
+// Selectores por nombre, nunca con CSS a pelo
+TMGitLabDOM.query("labelsBlock"); // el elemento
+TMGitLabDOM.resolve("title"); // qué selector ha funcionado
+await TMGitLabDOM.waitFor("sidebar", 10000);
+
+// Datos de la página
+TMGitLabDOM.getContext(); // { type, iid, fullPath, namespace, project, url }
+TMGitLabDOM.getProjectId(); // '556'   (body[data-project-id])
+TMGitLabDOM.getProjectUrl(); // 'https://git.../odoo-16/fl-v16'
+TMGitLabDOM.getTitle();
+TMGitLabDOM.getCurrentUser(); // { username, id, name }   (desde gon)
+TMGitLabDOM.getCurrentLabels(); // [{ name, color }]
+TMGitLabDOM.getNotesText();
+
+// Inyectar un botón en la barra de acciones correcta, sin duplicar
+TMGitLabDOM.injectButton({
+  id: "mi-boton",
+  text: "⏱️ Imputar Horas",
+  onClick: abrirPopup,
+});
+
+// Ciclo de vida: sustituye a window.addEventListener('load', ...)
+// Se vuelve a ejecutar al navegar entre issues (SPA) y cuando Vue
+// repinta la cabecera y se lleva el botón por delante.
+TMGitLabDOM.onPage(
+  () => {
+    TMGitLabDOM.injectButton({ id: "mi-boton", text: "…", onClick });
+  },
+  {
+    guard: "mi-boton", // si ya está montado, no hace nada
+    match: (ctx) => ctx.type === "issue",
+  },
+);
+```
+
+Claves de selector disponibles: `sidebar`, `labelsBlock`, `labelsEditButton`,
+`currentLabel`, `title`, `actionBar`, `notes`, `commentEditor`, `commentSubmit`.
+
+> **Nota:** en la vista *work item* el campo de comentario es un
+> contenteditable de TipTap/ProseMirror, no un `<textarea>`. Las *quick
+> actions* por asignación de `.value` ya no funcionan ahí: usa la API.
+
 ### GitLab Plugin
 
 ```javascript
@@ -421,6 +478,7 @@ npm run rebuild
 | `tm-core.js`      | Solo core (sin componentes) |
 | `tm-framework.js` | Framework completo          |
 | `tm-styles.css`   | Estilos                     |
+| `tm-gitlab-dom.js` | Selectores DOM de GitLab   |
 | `tm-gitlab.js`    | Plugin GitLab               |
 | `tm-odoo.js`      | Plugin Odoo                 |
 | `*.min.js/css`    | Versiones minificadas       |
@@ -432,6 +490,7 @@ npm run rebuild
 // @name         Imputaciones
 // @match        https://git.factorlibre.com/*/-/issues/*
 // @require      https://raw.githubusercontent.com/.../dist/tm-framework.js
+// @require      https://raw.githubusercontent.com/.../dist/tm-gitlab-dom.js
 // @require      https://raw.githubusercontent.com/.../dist/tm-gitlab.js
 // @require      https://raw.githubusercontent.com/.../dist/tm-odoo.js
 // @resource     TM_CSS https://raw.githubusercontent.com/.../dist/tm-styles.css

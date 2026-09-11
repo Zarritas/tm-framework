@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Plugin: gitlab-dom
  * Version: 1.2.0
- * Built: 2026-09-11T07:35:05.876Z
+ * Built: 2026-09-11T07:37:38.064Z
  * Author: Jesús Lorenzo
  * License: MIT
  */
@@ -488,14 +488,19 @@
 
         /**
          * Create a button styled like GitLab's own.
-         * @param {{ id, text, title, onClick, size, iconUrl }} options
+         *
+         * Keep `icon` (an emoji) or `iconUrl` (an image) separate from `text`:
+         * that is what lets the label be hidden while the button stays
+         * recognisable. See setButtonLabels().
+         *
+         * @param {{ id, text, title, onClick, size, icon, iconUrl }} options
          */
-        createButton({ id, text = '', title = '', onClick, size = 'md', iconUrl = '' }) {
+        createButton({ id, text = '', title = '', onClick, size = 'md', icon = '', iconUrl = '' }) {
             const btn = document.createElement('button');
             btn.type = 'button';
             if (id) btn.id = id;
-            if (title) btn.title = title;
-            btn.className = `btn gl-button btn-default btn-${size} btn-default-secondary gl-shrink-0`;
+            btn.title = title || text;
+            btn.className = `btn gl-button btn-default btn-${size} btn-default-secondary gl-shrink-0 tm-injected-btn`;
 
             if (iconUrl) {
                 const img = document.createElement('img');
@@ -504,6 +509,12 @@
                 // The top bar is only 48px tall, so the icon has to follow the size.
                 img.height = size === 'sm' ? 16 : 25;
                 btn.appendChild(img);
+            } else if (icon) {
+                const span = document.createElement('span');
+                span.className = 'tm-btn-icon';
+                span.setAttribute('aria-hidden', 'true');
+                span.innerText = icon;
+                btn.appendChild(span);
             }
 
             const label = document.createElement('span');
@@ -512,7 +523,61 @@
             btn.appendChild(label);
 
             if (onClick) btn.addEventListener('click', onClick);
+
+            this._applyLabelVisibility(btn);
             return btn;
+        },
+
+        // ═══════════════════════════════════════════════════════════════
+        // BUTTON LABELS
+        // ═══════════════════════════════════════════════════════════════
+
+        _labelsVisible: true,
+
+        /**
+         * Show or hide the text of every injected button, keeping the icon.
+         * Buttons injected later inherit the setting, so a userscript only
+         * has to call this once (and again from its menu command).
+         *
+         * A button with no icon keeps its label regardless: hiding it would
+         * leave an empty button.
+         *
+         * @param {boolean} visible
+         * @returns {boolean} the setting actually applied
+         */
+        setButtonLabels(visible) {
+            this._labelsVisible = visible !== false;
+            document.querySelectorAll('.tm-injected-btn')
+                .forEach(btn => this._applyLabelVisibility(btn));
+            return this._labelsVisible;
+        },
+
+        /**
+         * Flip the label setting.
+         * @returns {boolean} the new setting
+         */
+        toggleButtonLabels() {
+            return this.setButtonLabels(!this._labelsVisible);
+        },
+
+        /**
+         * @returns {boolean} whether button labels are currently shown
+         */
+        areButtonLabelsVisible() {
+            return this._labelsVisible;
+        },
+
+        _applyLabelVisibility(btn) {
+            const label = btn.querySelector('.gl-button-text');
+            if (!label) return;
+
+            const hasIcon = btn.querySelector('img, .tm-btn-icon') !== null;
+            const hide = !this._labelsVisible && hasIcon;
+
+            label.hidden = hide;
+            // GitLab's button CSS sets display on the label, which would win
+            // over [hidden]; the inline style keeps this working anyway.
+            label.style.display = hide ? 'none' : '';
         },
 
         /**

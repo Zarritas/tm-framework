@@ -75,6 +75,23 @@
             '[data-testid="top-bar"] .top-bar-container',
             '.top-bar-fixed .top-bar-container',
             '[data-testid="top-bar"]'
+        ],
+        // Condensed header GitLab mounts under the top bar once the real
+        // header scrolls away. It is created and destroyed on scroll, so
+        // anything injected into it has to be re-injected when it comes back.
+        stickyHeader: [
+            '[data-testid="work-item-sticky-header"]',
+            '.issue-sticky-header',
+            '.merge-request-sticky-header'
+        ],
+        // The Edit button, in the real header and in the sticky one.
+        editButton: {
+            'work-item': ['[data-testid="work-item-edit-form-button"]'],
+            classic: ['.js-issuable-edit', '[data-testid="edit-title-button"]']
+        },
+        editButtonSticky: [
+            '[data-testid="work-item-edit-button-sticky"]',
+            '[data-testid="work-item-sticky-header"] .shortcut-edit-wi-description'
         ]
     };
 
@@ -435,48 +452,97 @@
         // ═══════════════════════════════════════════════════════════════
 
         /**
-         * Where a new button goes, and how to place it.
+         * Every place a button should be mounted, for the current page.
          *
-         * 'topbar' (default): the fixed breadcrumb bar, so the button stays
-         *   on screen while scrolling. The work item header is NOT sticky —
-         *   GitLab's own Edit button scrolls out of view with it — so this is
-         *   the only placement that survives a scroll.
-         * 'header': next to Edit / the to-do button, matching GitLab's own
-         *   controls. Scrolls away with the header.
+         * There is more than one, and that is the point: GitLab's header
+         * scrolls away and is replaced by a condensed sticky header with its
+         * own Edit button. To stay reachable the button has to live in both,
+         * so each anchor gets its own copy, keyed to derive a unique id.
          *
-         * @param {'topbar'|'header'} placement
-         * @returns {{ anchor: Element, mode: 'before'|'after'|'append', size: 'sm'|'md' }|null}
+         * 'header' (default): next to Edit, plus the sticky header while it
+         *   exists.
+         * 'topbar': the fixed breadcrumb bar. One anchor, always visible, but
+         *   away from GitLab's own controls.
+         *
+         * @param {'header'|'topbar'} placement
+         * @returns {{ key, anchor, mode, size }[]}
          */
-        getActionBarAnchor(placement = 'topbar') {
+        getActionBarAnchors(placement = 'header') {
             if (placement === 'topbar') {
                 const bar = this.query('topBar');
-                if (bar) return { anchor: bar, mode: 'append', size: 'sm' };
-                // Older GitLab without the fixed top bar: fall back to the header.
+                return bar ? [{ key: 'main', anchor: bar, mode: 'append', size: 'sm' }] : [];
             }
 
+            const anchors = [];
             const layout = this.getLayout();
 
             if (layout === LAYOUT.WORK_ITEM) {
-                // Header row: [Edit] [icon] [More actions]. Sit left of Edit.
-                const edit = document.querySelector('[data-testid="work-item-edit-form-button"]');
-                if (edit) return { anchor: edit, mode: 'before', size: 'md' };
-
-                const actions = document.querySelector('[data-testid="work-item-actions-dropdown"]');
-                if (actions?.parentElement?.parentElement) {
-                    return { anchor: actions.parentElement, mode: 'before', size: 'md' };
+                const edit = this.query('editButton');
+                if (edit) {
+                    anchors.push({ key: 'main', anchor: edit, mode: 'before', size: 'md' });
+                } else {
+                    const actions = document.querySelector('[data-testid="work-item-actions-dropdown"]');
+                    if (actions?.parentElement) {
+                        anchors.push({ key: 'main', anchor: actions.parentElement, mode: 'before', size: 'md' });
+                    }
+                }
+            } else {
+                // Classic: the to-do button's container. Its parent is
+                // .merge-request-tabs-actions on MRs, NOT .issuable-sidebar-header,
+                // which is why the old compound selector never matched.
+                const todo = document.querySelector('[data-testid="sidebar-todo"]');
+                if (todo?.parentElement) {
+                    anchors.push({ key: 'main', anchor: todo, mode: 'after', size: 'md' });
+                } else {
+                    const header = document.querySelector('.detail-page-header-actions, .issuable-sidebar-header');
+                    if (header) anchors.push({ key: 'main', anchor: header, mode: 'append', size: 'md' });
                 }
             }
 
-            // Classic: the to-do button's container. Note its parent is
-            // .merge-request-tabs-actions on MRs, NOT .issuable-sidebar-header,
-            // which is why the old compound selector never matched.
-            const todo = document.querySelector('[data-testid="sidebar-todo"]');
-            if (todo?.parentElement) return { anchor: todo, mode: 'after', size: 'md' };
+            // Only present once the page has been scrolled.
+            const stickyEdit = this.query('editButtonSticky');
+            if (stickyEdit) {
+                anchors.push({ key: 'sticky', anchor: stickyEdit, mode: 'before', size: 'md' });
+            } else {
+                const sticky = this.query('stickyHeader');
+                const inner = sticky?.querySelector('.work-item-sticky-header-text') || sticky;
+                if (inner) anchors.push({ key: 'sticky', anchor: inner, mode: 'append', size: 'md' });
+            }
 
-            const header = document.querySelector('.detail-page-header-actions, .issuable-sidebar-header');
-            if (header) return { anchor: header, mode: 'append', size: 'md' };
+            // Nowhere to put it (an unknown page): fall back to the top bar
+            // rather than dropping the button silently.
+            if (!anchors.length) {
+                const bar = this.query('topBar');
+                if (bar) anchors.push({ key: 'main', anchor: bar, mode: 'append', size: 'sm' });
+            }
 
-            return null;
+            return anchors;
+        },
+
+        /**
+         * Back-compat: the first anchor for a placement.
+         * @deprecated use getActionBarAnchors()
+         */
+        getActionBarAnchor(placement = 'header') {
+            return this.getActionBarAnchors(placement)[0] || null;
+        },
+
+        /**
+         * The element id a button gets at a given anchor. The main anchor
+         * keeps the caller's id so existing lookups keep working.
+         */
+        buttonIdFor(id, key) {
+            return key === 'main' ? id : `${id}--${key}`;
+        },
+
+        /**
+         * Is the button mounted at every anchor the page currently offers?
+         * False when the sticky header has just appeared with no copy in it.
+         */
+        isButtonMounted(id, placement = 'header') {
+            const anchors = this.getActionBarAnchors(placement);
+            if (!anchors.length) return false;
+            return anchors.every(a => document.getElementById(this.buttonIdFor(id, a.key)) !== null);
         },
 
         /**
@@ -574,32 +640,40 @@
         },
 
         /**
-         * Inject a button into the page action bar. Idempotent: if a button
-         * with the same id is already mounted, nothing happens.
+         * Mount a button at every anchor the page offers, skipping the ones
+         * where it already is. Idempotent, so it is safe to call on every
+         * DOM mutation.
          *
-         * Defaults to the fixed top bar so the button survives scrolling;
-         * pass placement: 'header' to sit next to GitLab's own controls.
+         * By default that means next to Edit and, once the page is scrolled,
+         * in the sticky header too. Pass placement: 'topbar' for a single
+         * copy in the fixed breadcrumb bar.
          *
-         * @param {{ id, text, title, onClick, iconUrl, placement }} options
-         * @returns {Element|null} the button, or null if there was nowhere to put it
+         * @param {{ id, text, title, onClick, icon, iconUrl, placement }} options
+         * @returns {Element|null} the button at the main anchor, or null if
+         *   there was nowhere to put it
          */
         injectButton(options = {}) {
-            const { id, placement = 'topbar' } = options;
-            if (id && document.getElementById(id)) {
-                return document.getElementById(id);
+            const { id, placement = 'header' } = options;
+            const anchors = this.getActionBarAnchors(placement);
+            if (!anchors.length) return null;
+
+            let main = null;
+
+            for (const { key, anchor, mode, size } of anchors) {
+                const buttonId = this.buttonIdFor(id, key);
+                let btn = id ? document.getElementById(buttonId) : null;
+
+                if (!btn) {
+                    btn = this.createButton({ size, ...options, id: buttonId });
+                    if (mode === 'before') anchor.before(btn);
+                    else if (mode === 'after') anchor.after(btn);
+                    else anchor.appendChild(btn);
+                }
+
+                if (key === 'main') main = btn;
             }
 
-            const target = this.getActionBarAnchor(placement);
-            if (!target) return null;
-
-            const { anchor, mode, size } = target;
-            const btn = this.createButton({ size, ...options });
-
-            if (mode === 'before') anchor.before(btn);
-            else if (mode === 'after') anchor.after(btn);
-            else anchor.appendChild(btn);
-
-            return btn;
+            return main || document.getElementById(this.buttonIdFor(id, anchors[0].key));
         },
 
         // ═══════════════════════════════════════════════════════════════
@@ -616,20 +690,31 @@
          * drops injected nodes.
          *
          * @param {Function} callback - called with the current context
-         * @param {{ match?: Function, guard?: string, debounce?: number }} options
+         * @param {{ match?: Function, guard?: string|Function, placement?: string, debounce?: number }} options
          *   match:  () => boolean, whether callback should run on this page
-         *   guard:  element id whose absence means callback must run again
+         *   guard:  id of an injected button — the callback runs again while
+         *           it is missing from any anchor; or a function returning
+         *           true when there is nothing left to do
+         *   placement: which anchors the guard checks (default 'header')
          *   debounce: ms to coalesce DOM mutations (default 150)
          * @returns {Function} unsubscribe
          */
         onPage(callback, options = {}) {
-            const { match, guard, debounce = 150 } = options;
+            const { match, guard, placement = 'header', debounce = 150 } = options;
             const self = this;
             let timer = null;
             let lastUrl = globalThis.location.href;
 
             const shouldRun = () => {
-                if (guard && document.getElementById(guard)) return false;
+                // A string guard is the id of an injected button: it counts as
+                // mounted only when it is at every anchor, so the callback runs
+                // again when the sticky header appears mid-scroll.
+                if (typeof guard === 'function') {
+                    if (guard(self.getContext())) return false;
+                } else if (guard && self.isButtonMounted(guard, placement)) {
+                    return false;
+                }
+
                 if (match && !match(self.getContext())) return false;
                 return true;
             };

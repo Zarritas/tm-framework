@@ -1,7 +1,7 @@
 /*!
  * TM Framework - Plugin: gitlab
- * Version: 1.3.0
- * Built: 2026-09-11T08:04:59.315Z
+ * Version: 1.4.0
+ * Built: 2026-09-11T08:07:21.731Z
  * Author: Jesús Lorenzo
  * License: MIT
  */

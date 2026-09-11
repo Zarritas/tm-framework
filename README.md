@@ -299,16 +299,19 @@ TMGitLabDOM.getCurrentLabels(); // [{ name, color }]
 TMGitLabDOM.getNotesText();
 
 // Inyectar un botón, sin duplicar.
-// Por defecto va a la barra fija del breadcrumb, que es la única que
-// permanece visible al hacer scroll: el header del work item no es sticky
-// y se lleva por delante hasta el botón Edit del propio GitLab.
+// Monta una copia en CADA sitio que ofrezca la página: junto al botón Edit
+// y, cuando GitLab saca su header condensado al hacer scroll hacia arriba,
+// también junto al Edit de ese header. La segunda copia lleva el id
+// derivado "mi-boton--sticky".
 TMGitLabDOM.injectButton({
   id: "mi-boton",
   icon: "⏱️", // emoji; o iconUrl: "https://..." para una imagen
   text: "Imputar Horas",
   onClick: abrirPopup,
-  placement: "topbar", // 'header' para el sitio de los controles de GitLab
+  placement: "header", // por defecto; 'topbar' = una sola copia en la barra fija
 });
+
+TMGitLabDOM.isButtonMounted("mi-boton"); // ¿está en todas las anclas?
 
 // Ocultar el texto dejando sólo el icono (los botones que se inyecten
 // después heredan el ajuste). Un botón sin icono conserva su texto.
@@ -331,15 +334,18 @@ TMGitLabDOM.onPage(
     TMGitLabDOM.injectButton({ id: "mi-boton", text: "…", onClick });
   },
   {
-    guard: "mi-boton", // si ya está montado, no hace nada
+    // No basta con que exista: se vuelve a ejecutar mientras falte en
+    // alguna ancla, que es como la copia entra en el header sticky al
+    // aparecer éste a media página.
+    guard: "mi-boton",
     match: (ctx) => ctx.type === "issue",
   },
 );
 ```
 
 Claves de selector disponibles: `sidebar`, `labelsBlock`, `labelsEditButton`,
-`currentLabel`, `title`, `actionBar`, `topBar`, `notes`, `commentEditor`,
-`commentSubmit`.
+`currentLabel`, `title`, `actionBar`, `topBar`, `stickyHeader`, `editButton`,
+`editButtonSticky`, `notes`, `commentEditor`, `commentSubmit`.
 
 Cuando ninguna de las alternativas de una clave casa, `resolve()` avisa una vez
 por consola con la versión y el layout detectados. Es el aviso temprano de que

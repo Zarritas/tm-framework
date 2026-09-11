@@ -5,6 +5,35 @@ All notable changes to TM Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-09-11
+
+### Changed
+
+- `injectButton()` mounts a copy at **every** anchor the page offers instead
+  of picking one. On an issue that means next to Edit and, once GitLab mounts
+  its condensed `[data-testid="work-item-sticky-header"]`, next to that
+  header's own Edit too. Copies past the first get a derived id
+  (`<id>--sticky`), so the caller's own id still finds the main one.
+- `placement` defaults back to `'header'`. `'topbar'` still gives a single
+  copy in the fixed breadcrumb bar.
+- `onPage()`'s string `guard` now means "this button id is mounted at every
+  anchor" rather than "this element exists". Finding the header copy used to
+  be enough to skip the callback, which left the sticky header without one.
+  `guard` also accepts a function.
+
+### Added
+
+- `getActionBarAnchors(placement)`, `isButtonMounted(id, placement)` and
+  `buttonIdFor(id, key)`.
+- Selector keys `stickyHeader`, `editButton` and `editButtonSticky`.
+
+### Notes
+
+The sticky header follows a scroll-up-to-reveal pattern: it appears when you
+scroll back up, not on the way down, and GitLab destroys it when it hides. The
+copy is re-injected on its own each time it comes back, from the same
+MutationObserver `onPage()` already uses.
+
 ## [1.3.0] - 2026-09-11
 
 ### Fixed

@@ -298,12 +298,30 @@ TMGitLabDOM.getCurrentUser(); // { username, id, name }   (desde gon)
 TMGitLabDOM.getCurrentLabels(); // [{ name, color }]
 TMGitLabDOM.getNotesText();
 
-// Inyectar un botón en la barra de acciones correcta, sin duplicar
+// Inyectar un botón, sin duplicar.
+// Por defecto va a la barra fija del breadcrumb, que es la única que
+// permanece visible al hacer scroll: el header del work item no es sticky
+// y se lleva por delante hasta el botón Edit del propio GitLab.
 TMGitLabDOM.injectButton({
   id: "mi-boton",
-  text: "⏱️ Imputar Horas",
+  icon: "⏱️", // emoji; o iconUrl: "https://..." para una imagen
+  text: "Imputar Horas",
   onClick: abrirPopup,
+  placement: "topbar", // 'header' para el sitio de los controles de GitLab
 });
+
+// Ocultar el texto dejando sólo el icono (los botones que se inyecten
+// después heredan el ajuste). Un botón sin icono conserva su texto.
+TMGitLabDOM.setButtonLabels(false);
+TMGitLabDOM.toggleButtonLabels();
+TMGitLabDOM.areButtonLabelsVisible();
+
+// Para lo que sí depende de la release (un campo de API, un endpoint)
+TMGitLabDOM.getVersionParts(); // { major: 18, minor: 2, patch: 8 }
+TMGitLabDOM.atLeast(18, 2); // true
+
+// Escape hatch: parchear un selector sin esperar a una versión del framework
+TMGitLabDOM.override("labelsBlock", '[data-testid="nuevo-id"]');
 
 // Ciclo de vida: sustituye a window.addEventListener('load', ...)
 // Se vuelve a ejecutar al navegar entre issues (SPA) y cuando Vue
@@ -320,7 +338,13 @@ TMGitLabDOM.onPage(
 ```
 
 Claves de selector disponibles: `sidebar`, `labelsBlock`, `labelsEditButton`,
-`currentLabel`, `title`, `actionBar`, `notes`, `commentEditor`, `commentSubmit`.
+`currentLabel`, `title`, `actionBar`, `topBar`, `notes`, `commentEditor`,
+`commentSubmit`.
+
+Cuando ninguna de las alternativas de una clave casa, `resolve()` avisa una vez
+por consola con la versión y el layout detectados. Es el aviso temprano de que
+un upgrade de GitLab ha movido algo, y se parchea con `override()` sin tocar el
+framework.
 
 > **Nota:** en la vista *work item* el campo de comentario es un
 > contenteditable de TipTap/ProseMirror, no un `<textarea>`. Las *quick

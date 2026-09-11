@@ -5,6 +5,44 @@ All notable changes to TM Framework will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-09-11
+
+### Fixed
+
+- **Injected buttons disappeared on scroll.** The work item header is not
+  sticky: it leaves the viewport as you scroll, taking anything injected into
+  it along — the same thing happens to GitLab's own Edit button. The node was
+  never removed, it just stopped being visible.
+
+### Changed
+
+- `injectButton()` now defaults to `placement: 'topbar'`, placing the button in
+  `[data-testid="top-bar"]` — the fixed breadcrumb bar, the only container that
+  stays on screen while scrolling. Pass `placement: 'header'` for the previous
+  spot next to GitLab's own controls.
+- `createButton()` takes `size` (`'sm'` in the 48px top bar, `'md'` elsewhere)
+  and separates the icon from the text: `icon` for an emoji, `iconUrl` for an
+  image. The button's `title` falls back to its text.
+
+### Added
+
+- `setButtonLabels(visible)` / `toggleButtonLabels()` / `areButtonLabelsVisible()`
+  show or hide the text of every injected button, keeping the icon. Buttons
+  injected later inherit the setting, so a userscript calls it once at startup
+  and again from its `GM_registerMenuCommand`. A button with no icon always
+  keeps its label — hiding it would leave an empty button.
+- `topBar` selector key.
+- `getVersionParts()` and `atLeast(major, minor, patch)` for behaviour that
+  genuinely depends on the release. Not for picking selectors: GitLab ships
+  layouts behind feature flags, and on 18.2.8 one instance already serves the
+  work item layout for issues and the classic one for merge requests, which is
+  why `getLayout()` reads the DOM instead.
+- `override(key, selectors)` adds selector candidates at runtime, so a
+  userscript can patch a GitLab upgrade without waiting for a framework
+  release.
+- `resolve()` warns once per key when no candidate matches, naming the version
+  and the layout: the early signal that an upgrade moved something.
+
 ## [1.2.0] - 2026-09-11
 
 ### Added

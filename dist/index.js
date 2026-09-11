@@ -2,7 +2,7 @@
 // Use this file for reference, not for direct import in Tampermonkey
 
 module.exports = {
-    version: '1.2.0',
+    version: '1.3.0',
     files: {
         core: 'tm-core.js',
         framework: 'tm-framework.js',
